@@ -1,0 +1,261 @@
+Native Android Caption Burn-In App — Implementation Plan
+
+ Context
+
+ A native Android app that takes a user-selected video, transcribes the spoken
+ audio fully on-device (auto-detecting language), optionally translates the
+ transcript on-device, lets the user customize caption appearance (size,
+ position, original / translated / dual-line, word-by-word highlight), then
+ burns the captions into the video and saves it to the user's library or shares
+ it. All ML runs on-device — no cloud calls for transcription or translation.
+
+ The codebase is greenfield (H:\vid-caption is empty). This plan establishes
+ the project from scratch.
+
+ User-confirmed decisions:
+ - Min SDK: Android 13 (API 33)
+ - Whisper delivery: download on first launch (user picks size)
+ - Caption editor: included in v1 (correct text, adjust timing)
+ - Processing: foreground service with notification
+
+ ---
+ Tech stack
+
+ ┌─────────────────────────────────┬────────────────────────────────────────────────────────────────────────┬──────────────────────────────────────────────────────────────────────┐
+ │              Layer              │                                 Choice                                 │                                 Why                                  │
+ ├─────────────────────────────────┼────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────┤
+ │ Language                        │ Kotlin 2.0                                                             │ Standard for modern Android                                          │
+ ├─────────────────────────────────┼────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────┤
+ │ UI                              │ Jetpack Compose + Material 3 (Material You)                            │ Beautiful, modern, dynamic theming                                   │
+ ├─────────────────────────────────┼────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────┤
+ │ Architecture                    │ MVI-ish: ViewModel + StateFlow + UseCases                              │ Predictable state for an editor app                                  │
+ ├─────────────────────────────────┼────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────┤
+ │ DI                              │ Hilt                                                                   │ Standard, low-friction                                               │
+ ├─────────────────────────────────┼────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────┤
+ │ Persistence                     │ Room (projects) + DataStore (settings)                                 │ Right tool per shape                                                 │
+ ├─────────────────────────────────┼────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────┤
+ │ Video preview                   │ Media3 ExoPlayer + custom Compose overlay                              │ Smooth scrubbing + caption preview                                   │
+ ├─────────────────────────────────┼────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────┤
+ │ Speech-to-text                  │ whisper.cpp via Android NDK + JNI wrapper, model downloaded at runtime │ Best on-device accuracy, language ID built in, word-level timestamps │
+ ├─────────────────────────────────┼────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────┤
+ │ Translation                     │ ML Kit Translation (on-device)                                         │ 50+ languages, free, models auto-downloaded by ML Kit                │
+ ├─────────────────────────────────┼────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────┤
+ │ Audio extract + caption burn-in │ FFmpegKit (LTS, GPL build for subtitles/ass filter)                    │ Battle-tested, ASS karaoke effects = word highlight                  │
+ ├─────────────────────────────────┼────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────┤
+ │ Subtitle format                 │ ASS (Advanced SubStation Alpha)                                        │ Native karaoke \k tags for word-by-word highlight, full styling      │
+ ├─────────────────────────────────┼────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────┤
+ │ Background work                 │ ForegroundService + WorkManager (chained workers)                      │ Standard pattern for long media work                                 │
+ ├─────────────────────────────────┼────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────┤
+ │ Model download                  │ WorkManager + OkHttp resumable                                         │ Robust large-file download                                           │
+ └─────────────────────────────────┴────────────────────────────────────────────────────────────────────────┴──────────────────────────────────────────────────────────────────────┘
+
+ Why whisper.cpp over alternatives
+
+ - Sherpa-onnx also viable (prebuilt AAR, simpler integration). Falling back to it is the contingency if NDK build proves painful.
+ - Android SpeechRecognizer rejected: not reliable offline across languages on most devices, no word timestamps, no language auto-detect we can rely on.
+ - MediaPipe: limited speech model coverage.
+
+ Why ASS subtitles for burn-in (not per-frame Canvas overlay)
+
+ ASS supports \k<duration> karaoke tags directly — one subtitle file per
+ sentence with each word's duration produces word-by-word highlighting "for
+ free" at FFmpeg burn time. Per-frame Canvas rendering would be 5–20× slower
+ and more code. ASS also handles font/size/outline/position cleanly.
+
+ ---
+ Module / package layout
+
+ app/src/main/java/com/charlesh/captionburn/
+ ├── ui/
+ │   ├── theme/                       # Material 3 + dynamic color
+ │   ├── nav/                         # Navigation graph
+ │   ├── onboarding/                  # First-run model download
+ │   ├── home/                        # Library of past projects + import FAB
+ │   ├── editor/                      # Preview, transcript, style controls
+ │   │   ├── components/              # CaptionOverlay, StylePanel, WordChip…
+ │   │   └── EditorViewModel.kt
+ │   ├── export/                      # Progress + result screen
+ │   └── settings/
+ ├── domain/
+ │   ├── model/                       # Project, Transcript, Word, Segment, CaptionStyle
+ │   ├── usecase/                     # ImportVideo, Transcribe, Translate, RenderCaptions, ExportVideo
+ │   └── repository/                  # interfaces
+ ├── data/
+ │   ├── transcription/               # WhisperEngine (JNI), ModelDownloader, AudioExtractor
+ │   ├── translation/                 # MlKitTranslator, language-pack manager
+ │   ├── render/                      # AssSubtitleBuilder, FFmpegBurner
+ │   ├── project/                     # Room entities, DAO, repo impl
+ │   └── media/                       # MediaStore save, share intents
+ ├── service/
+ │   ├── ProcessingService.kt         # Foreground service hosting WorkManager observer
+ │   └── workers/                     # ExtractAudioWorker, TranscribeWorker, TranslateWorker, BurnWorker
+ ├── di/                              # Hilt modules
+ └── CaptionBurnApp.kt                # Application class
+
+ app/src/main/cpp/
+ ├── CMakeLists.txt
+ ├── whisper-jni.cpp                  # JNI bridge
+ └── third_party/whisper.cpp/         # git submodule
+
+ app/src/main/assets/
+ └── ggml-vocab.bin (small, optional) # if any vocab assets needed at startup
+
+ ---
+ End-to-end pipeline
+
+ [User picks video via Photo Picker]
+          │
+          ▼
+ ExtractAudioWorker  ──► writes 16 kHz mono PCM WAV via FFmpeg
+          │
+          ▼
+ TranscribeWorker    ──► whisper.cpp full + token timestamps
+                         outputs: detected language, segments[], words[] (start,end,text,prob)
+          │
+          ▼
+ [User reviews/edits transcript in EditorScreen — also picks display mode +
+  target language + style + position]
+          │
+          ▼ (optional, if translation enabled)
+ TranslateWorker     ──► ML Kit Translator per segment, preserves timing
+          │
+          ▼
+ AssSubtitleBuilder  ──► generates .ass file from transcript + style
+                         karaoke `\k` tags per word for highlight
+                         dual-language uses two `Style:` rows + positioned `\an`
+          │
+          ▼
+ BurnWorker          ──► ffmpeg -i in.mp4 -vf "ass=subs.ass" -c:a copy out.mp4
+                         progress reported via FFmpegKit log callbacks
+          │
+          ▼
+ [Save to MediaStore.Video; show Export screen with Play / Share / Save buttons]
+
+ ---
+ Key files to create (in build order)
+
+ Phase 1 — Project bootstrap
+
+ - settings.gradle.kts, build.gradle.kts (root + app), gradle/libs.versions.toml
+ - AndroidManifest.xml: READ_MEDIA_VIDEO, POST_NOTIFICATIONS, FOREGROUND_SERVICE, FOREGROUND_SERVICE_DATA_SYNC, INTERNET (model download only)
+ - CaptionBurnApp.kt (Hilt @HiltAndroidApp)
+ - MainActivity.kt (single Activity, Compose host)
+ - ui/theme/Theme.kt — Material 3 with dynamic color, custom typography
+ - ui/nav/AppNavGraph.kt — Onboarding → Home → Editor → Export
+
+ Phase 2 — Whisper integration (highest risk; do early)
+
+ - app/src/main/cpp/CMakeLists.txt — builds whisper.cpp static lib + JNI shim
+ - app/src/main/cpp/whisper-jni.cpp — exposes init, transcribe, release
+ - data/transcription/WhisperEngine.kt — Kotlin wrapper around JNI; suspending transcribe(wavPath): TranscriptionResult
+ - data/transcription/ModelDownloader.kt — resumable OkHttp download to filesDir/models/, SHA-256 verify
+ - data/transcription/AudioExtractor.kt — FFmpeg invocation: -ar 16000 -ac 1 -c:a pcm_s16le
+ - domain/model/Transcript.kt — data class Word(start, end, text, prob), Segment(words, language)
+ - Verify: ship a 30-second test asset, run on a Pixel 6, confirm word timestamps line up within ~150 ms
+
+ Phase 3 — Editor & preview
+
+ - ui/editor/EditorScreen.kt — Media3 PlayerView in Compose, transcript list synced to playback time, caption overlay rendered with same ASS-style positioning the export uses
+ - ui/editor/components/CaptionOverlay.kt — Compose Canvas rendering current word(s) with highlight, mirrors final ASS output for WYSIWYG
+ - ui/editor/components/StylePanel.kt — bottom sheet: font size, position (top/middle/bottom + \an corners), highlight mode (none / fill / scale-up / underline), color, outline
+ - ui/editor/components/LanguageBar.kt — Original / Translated / Both (dual-line) toggle + target language picker
+ - ui/editor/components/TranscriptList.kt — tap-to-edit text, drag handles to nudge timestamps
+ - domain/model/CaptionStyle.kt — serializable, persisted with the Project
+
+ Phase 4 — Translation
+
+ - data/translation/MlKitTranslator.kt — wraps Translation.getClient(...), pre-checks language pack, surfaces download progress
+ - domain/usecase/TranslateTranscriptUseCase.kt — translates segment-by-segment to preserve original timings; word-level timing for translated text uses linear redistribution across the segment
+
+ Phase 5 — Render & burn
+
+ - data/render/AssSubtitleBuilder.kt — pure Kotlin; given Transcript + CaptionStyle + DisplayMode, emits .ass with \k<centiseconds> karaoke per word and dual-line positioning when both languages are shown
+ - data/render/FFmpegBurner.kt — invokes FFmpegKit, parses time= from log callback for progress, writes to app-private cache then publishes via MediaStore on success
+ - data/media/MediaStorePublisher.kt — inserts into MediaStore.Video.Media.EXTERNAL_CONTENT_URI (Movies/CaptionBurn/), opens via IS_PENDING flag
+
+ Phase 6 — Background work
+
+ - service/ProcessingService.kt — ForegroundService with notification + cancel action; observes WorkManager chain
+ - service/workers/* — one Worker per pipeline stage; chained with WorkManager.beginWith(...).then(...).enqueue(); failure of any worker surfaces a re-runnable error in the Editor
+ - domain/usecase/RunPipelineUseCase.kt — composes the whole chain, returns a Flow<PipelineState>
+
+ Phase 7 — Polish
+
+ - Animations: shared-element transition video card → editor; spring-based bottom sheet
+ - Empty/error states; permission rationale screens
+ - About / model management in Settings (delete / re-download / switch size)
+ - proguard-rules.pro — keep ML Kit + JNI symbols
+ - Crash logging: Timber + a local-only log file (no remote SDK to keep "fully offline" promise)
+
+ ---
+ Caption styling approach (the ASS bit)
+
+ A single segment with words [hello, world], style "highlight current word in
+ yellow", position bottom-center, becomes:
+
+ [Script Info]
+ ScriptType: v4.00+
+ PlayResX: 1920
+ PlayResY: 1080
+
+ [V4+ Styles]
+ Format: Name, Fontname, Fontsize, PrimaryColour, OutlineColour, …, Alignment
+ Style: Default, Inter, 64, &H00FFFFFF, &H00000000, …, 2
+
+ [Events]
+ Format: Layer, Start, End, Style, Text
+ Dialogue: 0,0:00:01.20,0:00:02.05,Default,,{\k60}hello {\k25}world
+
+ For dual-language, two Dialogue: rows at slightly different \an positions
+ (e.g. \an2 bottom for original, \an8 top for translation), or stacked via
+ \N. The same logic powers the live preview overlay, so what the user sees in
+ the editor is exactly what gets burned in.
+
+ ---
+ Critical risks & mitigations
+
+ ┌───────────────────────────────────────────────────────┬───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+ │                         Risk                          │                                                                  Mitigation                                                                   │
+ ├───────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+ │ whisper.cpp NDK build is the spike of the project     │ Tackle in Phase 2 first; fall back to sherpa-onnx-aar (prebuilt) if the build won't behave                                                    │
+ ├───────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+ │ Whisper model download is large (140 MB+) on cellular │ Default to Wi-Fi-only download, surface size clearly; offer tiny (~75 MB), base (~140 MB), small (~460 MB)                                    │
+ ├───────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+ │ FFmpegKit GPL build size (~40 MB native libs)         │ Use ABI splits to ship per-arch APKs / App Bundle; the user installs only their arch                                                          │
+ ├───────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+ │ Word-level timestamp accuracy                         │ Whisper's token timestamps drift on long segments; use 30 s chunking and --word-timestamps/DTW; cap segment length in editor for re-alignment │
+ ├───────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+ │ Translation timing per word                           │ Linear redistribution by character count is "good enough"; document this and don't over-engineer                                              │
+ ├───────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+ │ Android 13 foreground-service-type policing           │ Declare dataSync + mediaProcessing (API 34+) and request POST_NOTIFICATIONS on first use                                                      │
+ ├───────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+ │ MediaStore writes on Android 13+                      │ Use scoped insertion with IS_PENDING, finalize on success                                                                                     │
+ └───────────────────────────────────────────────────────┴───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+ ---
+ Verification (how we'll know it works)
+
+ After each phase, run on a real device (Pixel 6 / Android 14):
+
+ 1. Phase 2: Run WhisperEngine.transcribe() on a 30-second test WAV embedded in androidTest assets. Assert: language detected matches expectation, word count within ±10%, all word end - start < 2 s.
+ 2. Phase 3: Manual — import a 1-minute video, scrub timeline, confirm caption overlay updates at 60 fps and timestamps align within ~150 ms by ear.
+ 3. Phase 4: Translate Spanish → English on a test segment, confirm ML Kit model downloads automatically, output text is non-empty and reasonable.
+ 4. Phase 5: Generate .ass for a 3-segment transcript, open it in VLC against the source video — confirm karaoke highlighting renders. Then run the actual FFmpeg burn-in, confirm output plays in default Android video player with hardcoded captions.
+ 5. Phase 6: Start a pipeline, switch apps, lock the screen, confirm the foreground notification persists and processing completes; tap notification to return to Export screen.
+ 6. End-to-end smoke test: 2-minute Spanish-language video → app auto-detects es → user picks "both languages, word highlight, bottom" → exports → result plays correctly with original + English captions burned in. Total wall time on Pixel 6: target < 4× video
+ duration with base model.
+
+ A scripted test isn't realistic for the burn-in pipeline; verification is
+ device-driven manual QA per phase, plus unit tests for AssSubtitleBuilder
+ (pure Kotlin, easy to test).
+
+ ---
+ Out of scope for v1
+
+ - Cloud sync / accounts
+ - Editing the source video itself (trim, crop) — captions only
+ - Real-time captioning during recording
+ - Custom fonts beyond a curated bundled set
+ - Animated emojis / per-word emoji substitution (TikTok-style)
+
+ These can be follow-ups once the core pipeline is solid.

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CaptionBurn</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_title">Captions, on-device.</string>
+    <string name="onboarding_body">Auto-generate and burn captions into your videos. Speech recognition and translation run entirely on your phone.</string>
+    <string name="onboarding_pick_model">Pick a speech model</string>
+    <string name="onboarding_model_tiny">Tiny &#183; 75 MB &#183; Fastest</string>
+    <string name="onboarding_model_base">Base &#183; 142 MB &#183; Balanced</string>
+    <string name="onboarding_model_small">Small &#183; 466 MB &#183; Most accurate</string>
+    <string name="onboarding_continue">Continue</string>
+    <string name="onboarding_downloading">Downloading model&#8230;</string>
+    <string name="onboarding_wifi_only">Wi-Fi only</string>
+
+    <!-- Home -->
+    <string name="home_title">Your projects</string>
+    <string name="home_empty_title">No projects yet</string>
+    <string name="home_empty_body">Tap the button below to import a video and add captions.</string>
+    <string name="home_import">Import video</string>
+    <string name="home_project_delete_content_description">Delete project</string>
+    <string name="home_delete_project_title">Delete project?</string>
+    <string name="home_delete_project_body">Delete "%1$s" from your projects? This cannot be undone.</string>
+    <string name="home_delete_project_confirm">Delete</string>
+
+    <!-- Editor -->
+    <string name="editor_transcribing">Listening to your video&#8230;</string>
+    <string name="editor_languages_original">Original</string>
+    <string name="editor_languages_translated">Translation</string>
+    <string name="editor_languages_both">Both</string>
+    <string name="editor_style_size">Size</string>
+    <string name="editor_style_position">Position</string>
+    <string name="editor_style_highlight">Word highlight</string>
+    <string name="editor_style_color">Color</string>
+    <string name="editor_export">Export with captions</string>
+    <string name="editor_start_transcription">Start transcription</string>
+    <string name="editor_translation_hint_original_mode">Target language is set, but display mode is Original. Translation will not run unless you switch to Translation or Both.</string>
+
+    <!-- Export -->
+    <string name="export_progress">Burning captions&#8230;</string>
+    <string name="export_done_title">Captions ready</string>
+    <string name="export_stage_processing">Processing video&#8230;</string>
+    <string name="export_stage_download_translation_model">Downloading translation model&#8230;</string>
+    <string name="export_stage_translate">Translating captions&#8230;</string>
+    <string name="export_stage_build_subtitles">Building subtitles&#8230;</string>
+    <string name="export_stage_burn_publish">Burning captions into video&#8230;</string>
+    <string name="export_notifications_hint">Enable notifications so export progress stays visible while processing in background.</string>
+    <string name="export_save">Save to device</string>
+    <string name="export_play">Play</string>
+    <string name="export_share">Share</string>
+
+    <!-- Notifications -->
+    <string name="notif_channel_processing">Caption processing</string>
+    <string name="notif_processing_title">CaptionBurn is working</string>
+    <string name="notif_processing_cancel">Cancel</string>
+
+    <!-- Errors -->
+    <string name="error_generic">Something went wrong</string>
+    <string name="error_retry">Retry</string>
+    <string name="action_cancel">Cancel</string>
+</resources>

@@ -1,0 +1,34 @@
+## Play Store Listing Copy
+
+### App Name
+CaptionBurn: Video Captions
+
+### Short Description
+Auto-caption and burn subtitles into videos on-device, with translation and style controls.
+
+### Full Description
+CaptionBurn helps you turn spoken videos into shareable, captioned clips directly on your Android device.
+
+Import a video, generate accurate captions with on-device speech recognition, fine-tune subtitle styling, and export a finished video with burned-in captions ready to post anywhere.
+
+Everything is designed for creators who need fast results without cloud upload delays.
+
+Key features:
+- On-device transcription powered by Whisper (no cloud transcription required)
+- Built-in translation support for multilingual subtitle output
+- Burned-in captions that stay visible on every platform
+- Caption style controls for size, outline, placement, and highlight effects
+- Per-segment transcript editing before export
+- Export, play back, and share directly from your phone
+- Model management in Settings (switch and re-download speech models)
+
+Why CaptionBurn:
+- Privacy-first workflow: your source video stays on your device
+- Creator-friendly editing: adjust captions before final render
+- Mobile-first pipeline: pick video, caption, style, and export in one app
+
+Perfect for:
+- Social video creators
+- Educators and coaches
+- Multilingual content publishing
+- Anyone who wants readable, accessible videos with minimal effort

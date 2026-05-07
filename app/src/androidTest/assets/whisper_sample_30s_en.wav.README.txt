@@ -1,0 +1,14 @@
+Place a 30-second English speech WAV fixture here named:
+
+whisper_sample_30s_en.wav
+
+Required format:
+- Mono
+- 16 kHz
+- 16-bit PCM WAV
+- Spoken English voice (not silence/music/noise)
+
+This fixture is used by WhisperEngineInstrumentedTest to validate:
+- detected language = en
+- expected word-count range
+- sane per-word timing bounds

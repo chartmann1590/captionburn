@@ -1,0 +1,81 @@
+package com.charlesh.captionburn.service.workers
+
+import android.content.Context
+import android.net.Uri
+import androidx.hilt.work.HiltWorker
+import androidx.work.CoroutineWorker
+import androidx.work.WorkerParameters
+import com.charlesh.captionburn.data.project.ProjectRepository
+import com.charlesh.captionburn.data.settings.SettingsRepository
+import com.charlesh.captionburn.data.transcription.TranscriptionProgress
+import com.charlesh.captionburn.data.transcription.TranscriptionService
+import com.charlesh.captionburn.domain.model.ProjectStatus
+
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedInject
+import kotlinx.coroutines.flow.first
+
+@HiltWorker
+class TranscribeWorker @AssistedInject constructor(
+    @Assisted appContext: Context,
+    @Assisted params: WorkerParameters,
+    private val projects: ProjectRepository,
+    private val settings: SettingsRepository,
+    private val transcriptionService: TranscriptionService,
+) : CoroutineWorker(appContext, params) {
+
+    override suspend fun doWork(): Result {
+        val projectId = inputData.getString(PipelineWorkData.KEY_PROJECT_ID)
+            ?: return Result.failure(PipelineWorkData.failure("Missing project id", retryable = false))
+        val project = projects.getProject(projectId)
+            ?: return Result.failure(PipelineWorkData.failure("Project not found", retryable = false))
+
+        projects.updateProject(projectId) { it.copy(status = ProjectStatus.Transcribing, errorMessage = null) }
+        setProgress(PipelineWorkData.progress(stage = "transcribe", progress = 0.05f))
+
+        val model = settings.installedModel.first()
+            ?: return Result.failure(PipelineWorkData.failure("No Whisper model configured. Complete onboarding first.", retryable = false))
+        val lastProgress = transcriptionService.transcribe(
+            sourceUri = Uri.parse(project.sourceUri),
+            projectId = projectId,
+            modelChoice = model,
+        ).first { progress ->
+            when (progress) {
+                is TranscriptionProgress.ExtractingAudio -> setProgress(PipelineWorkData.progress("extract-audio", 0.12f))
+                is TranscriptionProgress.LoadingModel -> setProgress(PipelineWorkData.progress("load-model", 0.2f))
+                is TranscriptionProgress.Transcribing -> setProgress(PipelineWorkData.progress("transcribe", 0.35f))
+                else -> Unit
+            }
+            progress is TranscriptionProgress.Done || progress is TranscriptionProgress.Failed
+        }
+
+        return when (lastProgress) {
+            is TranscriptionProgress.Done -> {
+                projects.updateProject(projectId) {
+                    it.copy(
+                        status = ProjectStatus.Ready,
+                        transcript = lastProgress.transcript,
+                        errorMessage = null,
+                    )
+                }
+                Result.success()
+            }
+            is TranscriptionProgress.Failed -> {
+                projects.updateProject(projectId) {
+                    it.copy(status = ProjectStatus.Failed, errorMessage = lastProgress.userMessage)
+                }
+                if (runAttemptCount < 2) {
+                    Result.retry()
+                } else {
+                    Result.failure(
+                        PipelineWorkData.failure(
+                            message = lastProgress.userMessage,
+                            retryable = true,
+                        )
+                    )
+                }
+            }
+            else -> Result.failure(PipelineWorkData.failure("Transcription failed", retryable = true))
+        }
+    }
+}

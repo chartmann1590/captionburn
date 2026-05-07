@@ -1,0 +1,39 @@
+# Android Studio / IntelliJ
+*.iml
+.idea/
+.kotlin/
+
+# Gradle
+.gradle/
+**/build/
+/captures/
+
+# Native build
+.externalNativeBuild/
+.cxx/
+/app/.cxx/
+/app/src/main/cpp/third_party/whisper.cpp/build/
+
+# Local config & secrets — must never ship
+local.properties
+*.jks
+*.keystore
+!debug.keystore
+
+# Vendored whisper.cpp internals we don't want to redistribute as ours
+/app/src/main/cpp/third_party/whisper.cpp/.git/
+/app/src/main/cpp/third_party/whisper.cpp/.github/
+
+# Downloaded ML models (large, runtime-fetched)
+/app/src/main/assets/models/
+
+# Logs
+diagnostic-logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local Claude Code settings (per-machine)
+.claude/settings.local.json
