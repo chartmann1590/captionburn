@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CaptionBurn — Privacy Policy</title>
+  <meta name="description" content="Privacy policy for CaptionBurn for Android." />
+  <meta name="theme-color" content="#0b0810" />
+  <link rel="icon" type="image/png" href="assets/icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a class="brand" href="index.html">
+        <img src="assets/icon.png" alt="" />
+        <span>CaptionBurn</span>
+      </a>
+      <div class="nav-links">
+        <a href="index.html#features">Features</a>
+        <a href="index.html#how">How it works</a>
+        <a href="https://github.com/chartmann1590/captionburn">GitHub</a>
+        <a class="nav-cta" href="https://github.com/chartmann1590/captionburn/releases/latest">Download</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="legal">
+    <a class="legal-back" href="index.html">← Back to CaptionBurn</a>
+    <h1>Privacy Policy</h1>
+    <p class="updated">Last updated: 2026-05-07</p>
+
+    <p>CaptionBurn is an Android application built and maintained by Charles Hartmann. This policy explains, in plain English, what data the app handles, what stays on your device, and what is sent to third parties.</p>
+
+    <h2>1. The short version</h2>
+    <ul>
+      <li><strong>Your video stays on your device.</strong> It is never uploaded to us or to any third party.</li>
+      <li><strong>Your transcript stays on your device.</strong> It is never uploaded.</li>
+      <li><strong>Speech recognition runs locally</strong> using <a href="https://github.com/ggerganov/whisper.cpp">Whisper</a>. The speech model is downloaded once from a public CDN (HuggingFace), then runs offline.</li>
+      <li><strong>Translation runs locally</strong> using Google ML Kit. Translation language packs are downloaded from Google's CDN; your text is not uploaded to translate.</li>
+      <li><strong>The app shows ads</strong> via Google AdMob. AdMob receives standard ad-platform information (advertising ID, IP, ad interactions). No content from your videos or transcripts is shared with AdMob.</li>
+      <li><strong>We have no servers, no accounts, and no analytics.</strong> There is nothing for us to lose, leak, or sell.</li>
+    </ul>
+
+    <h2>2. Data we collect</h2>
+    <p><strong>None.</strong> CaptionBurn has no backend. The developer does not receive any information about you, your device, or your usage.</p>
+
+    <h2>3. Data third-party SDKs collect</h2>
+
+    <h3>Google AdMob (Google LLC)</h3>
+    <p>Used to serve banner and interstitial ads. AdMob may collect:</p>
+    <ul>
+      <li>Advertising ID (you can reset or limit it in your Android settings)</li>
+      <li>IP-derived approximate location</li>
+      <li>App interaction events related to ads (impressions, clicks)</li>
+      <li>Coarse device and app information</li>
+    </ul>
+    <p>AdMob's data practices are governed by Google's privacy policy: <a href="https://policies.google.com/privacy">https://policies.google.com/privacy</a>. The developer does not have access to AdMob's collected data beyond aggregate revenue reporting.</p>
+
+    <h3>Google ML Kit Translate (Google LLC)</h3>
+    <p>Used to translate captions on-device. ML Kit downloads compiled translation models from Google's CDN. Your text is never uploaded — translation runs entirely on your device. ML Kit may, on first run, send the device's app identifier to Google for diagnostics; see <a href="https://developers.google.com/ml-kit/terms">Google ML Kit terms</a>.</p>
+
+    <h3>Whisper speech recognition (open-source)</h3>
+    <p>The Whisper speech-to-text model runs entirely on your device. The model file is downloaded once on first use from a public source (HuggingFace, controlled by you in Settings). No audio leaves your device.</p>
+
+    <h2>4. Permissions explained</h2>
+    <ul>
+      <li><strong>READ_MEDIA_VIDEO</strong> — to read the video you select in the Photo Picker. The app cannot read any other media.</li>
+      <li><strong>INTERNET, ACCESS_NETWORK_STATE</strong> — to download the Whisper speech model and ML Kit translation packs once, and to fetch ads.</li>
+      <li><strong>FOREGROUND_SERVICE, FOREGROUND_SERVICE_DATA_SYNC, FOREGROUND_SERVICE_MEDIA_PROCESSING</strong> — to keep transcription and rendering running in the background with a visible notification, even when you switch apps.</li>
+      <li><strong>POST_NOTIFICATIONS</strong> — to show progress notifications while your video is being processed.</li>
+    </ul>
+
+    <h2>5. Data we share</h2>
+    <p>We do not have any of your data, so we cannot share it. The third parties listed above receive only what their SDKs collect directly on the device, as described in their own policies.</p>
+
+    <h2>6. Children's privacy</h2>
+    <p>CaptionBurn is not directed at children under 13. The AdMob target audience is set to General; we do not knowingly serve ads or solicit data from children.</p>
+
+    <h2>7. Data retention</h2>
+    <p>We do not retain any data because we do not collect any. Project files (your imported videos, generated captions, exported videos) are stored on your device and removed when you uninstall the app or delete the project.</p>
+
+    <h2>8. Your rights</h2>
+    <p>Because we have no servers and no account system, there is no data of yours to access, port, or delete from us. To remove all CaptionBurn data, uninstall the app from Android Settings → Apps → CaptionBurn. To opt out of personalized ads on Android, see <a href="https://support.google.com/googleplay/answer/9694276">Google Play's ads opt-out instructions</a>.</p>
+
+    <h2>9. Changes</h2>
+    <p>If this policy changes, the updated version will be posted at this URL with a new "Last updated" date. Material changes will be highlighted in app release notes.</p>
+
+    <h2>10. Contact</h2>
+    <p>Questions, takedown requests, or anything else: <a href="mailto:charles.h.hartmann1@gmail.com">charles.h.hartmann1@gmail.com</a>.</p>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div>© 2026 Charles Hartmann · MIT-licensed.</div>
+      <div>
+        <a href="privacy.html">Privacy</a>
+        <a href="https://github.com/chartmann1590/captionburn">GitHub</a>
+        <a class="footer-coffee" href="https://buymeacoffee.com/charleshartmann">☕ Buy me a coffee</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

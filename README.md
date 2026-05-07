@@ -1,101 +1,131 @@
+<div align="center">
+
 # CaptionBurn
 
-A native Android app that auto-generates and burns captions into your videos.
-Speech recognition (Whisper) and translation (ML Kit) run **entirely on-device**
-— no cloud calls.
+### Captions, on-device.
 
-## Status
+**Auto-caption your videos and burn the subtitles in — entirely on your phone.**
+No cloud, no uploads, no waiting.
 
-**Phase 5 of 7 complete (implementation).** The app includes whisper.cpp JNI
-transcription, translation, ASS subtitle generation, FFmpeg burn-in, and
-MediaStore publishing for exported captioned videos.
+[**Visit the website →**](https://chartmann1590.github.io/captionburn/)
+&nbsp;·&nbsp;
+[**Latest release →**](https://github.com/chartmann1590/captionburn/releases/latest)
+&nbsp;·&nbsp;
+[**☕ Buy me a coffee**](https://buymeacoffee.com/charleshartmann)
 
-Phase 5 validation evidence and manual QA checklist are documented in
-`PHASE5_VALIDATION.md`.
+<img src="marketing/play-store/02-editor.png" width="280" alt="CaptionBurn editor screen showing live caption preview" />
 
-See `C:\Users\Charles\.claude\plans\atomic-honking-wand.md` for the full plan.
+</div>
 
-## Requirements
+---
 
-- Android Studio Ladybug | 2024.2.1 or newer
-- JDK 17 (Android Studio bundles a compatible one)
-- Android SDK 35, NDK 26.x, CMake 3.22.1 (Android Studio offers to install all
-  of these on first sync)
-- A device or emulator on Android 13 (API 33) or newer
+## Why CaptionBurn
 
-## First-time setup
+- **🔒 Privacy-first** — Your video never leaves the device. Speech recognition runs locally with [Whisper](https://github.com/ggerganov/whisper.cpp). Translation runs locally with Google ML Kit. No accounts, no uploads, no telemetry.
+- **⚡ Fast** — On-device transcription with word-level timing. Pick a video, get captions in seconds.
+- **🎨 You're in control** — Edit every caption before you export. Pick the font size, position, outline, color, and word-highlight style. Translate to a second language if you want.
 
-1. Open the `vid-caption` folder in Android Studio.
-2. Accept SDK / NDK / CMake installation prompts.
-3. Let Gradle sync. Android Studio will create `gradle/wrapper/gradle-wrapper.jar`
-   and `gradlew` / `gradlew.bat` automatically if they're missing.
-4. Run the `app` configuration on a device or Pixel-class emulator.
+## Features
 
-## Caption style controls
+| | |
+|---|---|
+| **🎤 99 languages transcribed** | Whisper auto-detects the language of your video. Three model sizes (Tiny / Base / Small) — pick speed or accuracy. |
+| **🌐 50+ languages translated** | Tap a language, get a translated caption track on the same video. ML Kit downloads the language pack once. |
+| **🪄 Burned-in captions** | Captions are baked into the pixels — they show everywhere, on every platform, with no separate subtitle file. |
+| **✏️ Edit anything** | Tap any caption to fix a word. Adjust word timing. Re-render in seconds. |
+| **🎨 Style controls** | Size 36–110, 9 positions, outline 0–8 px, 5 text colors, 5 highlight colors, 4 word-effect styles (none / fill / grow / underline). |
+| **📂 Stays in your gallery** | Exports to your device's Movies/CaptionBurn folder. Share, post, or save normally. |
 
-Open a project in the Editor and tap **Style controls**.
+## How it works
 
-- **Size** changes caption text size in the preview and exported video.
-- **Outline** adds a dark edge around caption text for contrast on bright video.
-- **Placement** chooses the caption anchor point: top, middle, bottom, left,
-  center, or right.
-- **Word highlight** controls the spoken-word effect. `Off` renders one steady
-  caption per segment. `Color word`, `Grow word`, and `Underline` render
-  per-word overlay images so the exported video matches the preview.
-- **Text color** sets the normal caption color.
-- **Highlight color** sets the color used by active-word highlight modes.
+<div align="center">
 
-## Native Whisper setup (Phase 2)
+| 1. Import | 2. Transcribe | 3. Style | 4. Export |
+|:---:|:---:|:---:|:---:|
+| <img src="marketing/play-store/01-home.png" width="160" /> | <img src="marketing/play-store/02-editor.png" width="160" /> | <img src="marketing/play-store/03-style-controls.png" width="160" /> | <img src="marketing/play-store/04-export.png" width="160" /> |
+| Pick any video from your gallery | Whisper transcribes on-device with word-level timing | Choose font, color, position, word effects | Captions burned into the video, saved to your gallery |
 
-1. Initialize whisper.cpp sources once after clone:
-   - Windows (PowerShell): `./scripts/init-whisper.ps1`
-   - macOS/Linux: `./scripts/init-whisper.sh`
-2. Re-sync Gradle in Android Studio (or run `./gradlew :app:assembleDebug`).
-3. Confirm native build succeeds for your ABI (default filters: `arm64-v8a`, `armeabi-v7a`, `x86_64`).
+</div>
 
-If `app/src/main/cpp/third_party/whisper.cpp` is missing, CMake intentionally
-fails with instructions to run the init script.
+## Privacy in plain English
 
-## What works through Phase 2
+- Your **video stays on your device.** It is never uploaded.
+- Your **transcript stays on your device.** It is never uploaded.
+- The Whisper speech model is **downloaded once** from public CDNs (HuggingFace), then runs offline forever.
+- ML Kit **downloads small translation packs** (one per language) from Google's CDN. The pack is downloaded — your text is not uploaded.
+- The app shows **a banner ad and an occasional interstitial ad** via Google AdMob. AdMob receives standard ad-platform info (advertising ID, IP, app interactions). That's it.
 
-- Onboarding → Home → Editor → Export → Settings navigation
-- Material 3 dynamic-color theming, custom dark/light schemes
-- System Photo Picker for video selection (no broad storage permission needed)
-- Foreground service skeleton, notification channel, manifest plumbing
-- whisper.cpp JNI bridge and coroutine-friendly `WhisperEngine`
-- Resumable Whisper model download with SHA-256 verification
-- FFmpeg extraction to 16 kHz mono PCM WAV
-- End-to-end transcription orchestration (`TranscriptionService`)
+[Read the full privacy policy →](https://chartmann1590.github.io/captionburn/privacy.html)
 
-## Phase 2 verification checklist
+## Install
 
-Run on a device/emulator with API 33+:
+> Until the Google Play Store listing is live, install directly from the GitHub Releases page.
 
-1. Download a Whisper model from onboarding.
-2. Add a spoken English fixture:
-   - `app/src/androidTest/assets/whisper_sample_30s_en.wav`
-   - mono, 16 kHz, 16-bit PCM, 30 seconds
-3. Run instrumentation test:
-   - `./gradlew :app:connectedDebugAndroidTest --tests "com.charlesh.captionburn.data.transcription.WhisperEngineInstrumentedTest"`
-4. Confirm:
-   - detected language is `en`
-   - word count is in expected range
-   - each word duration is positive and < 2 seconds
+1. Go to [**Releases**](https://github.com/chartmann1590/captionburn/releases/latest).
+2. Download the right APK for your phone:
+   - `app-arm64-v8a-release.apk` — modern Android phones (most users)
+   - `app-armeabi-v7a-release.apk` — older 32-bit ARM phones
+   - `app-x86_64-release.apk` — emulators / Chromebooks
+3. Open the APK on your phone and follow the install prompt. (You may need to allow installs from unknown sources for your browser.)
 
-## What's next
+## Support the work
 
-Phase 6: WorkManager pipeline backed by the foreground service.
-Phase 7: animations, settings, ProGuard, polish.
+CaptionBurn is free, MIT-licensed, and built by one person. If it helps you, **[buy me a coffee ☕](https://buymeacoffee.com/charleshartmann)** — it keeps the lights on.
 
-## Module layout
+---
 
+<details>
+<summary><strong>For developers</strong></summary>
+
+### Build locally
+
+```sh
+git clone https://github.com/chartmann1590/captionburn.git
+cd captionburn
+# Create local.properties with your AdMob test keys (see app/build.gradle.kts for the keys read).
+./gradlew :app:assembleDebug
 ```
-app/src/main/java/com/charlesh/captionburn/
-├── ui/{theme,nav,onboarding,home,editor,export,settings}
-├── domain/model/         # Project, Transcript, Word, Segment, CaptionStyle
-├── data/transcription/   # WhisperJni (real impl in Phase 2)
-├── service/              # ProcessingService (foreground)
-└── di/                   # Hilt modules
 
-app/src/main/cpp/         # JNI bridge to whisper.cpp (added Phase 2)
-```
+Java 17 + Android SDK 35 + NDK 28.2.13676358 required. The project pins these via the Gradle wrapper and `ndkVersion`.
+
+### CI/CD
+
+Every push to `main` triggers `.github/workflows/release.yml`:
+
+1. **`test`** — runs unit tests (`./gradlew testDebugUnitTest`)
+2. **`build`** — assembles signed release APKs (per-ABI) + AAB, gates on 16 KB page alignment
+3. **`release`** — publishes a GitHub Release with all artifacts and a `mapping.txt` for crash deobfuscation
+
+`versionCode` is auto-incremented from `github.run_number + 100`; `versionName` becomes `0.1.<run_number>`.
+
+### Required GitHub Secrets
+
+| Secret | Purpose |
+|---|---|
+| `KEYSTORE_BASE64` | Upload key (base64 of the `.jks` file) |
+| `KEYSTORE_PASSWORD` | Keystore password |
+| `KEY_ALIAS` | Key alias inside the keystore |
+| `KEY_PASSWORD` | Key password |
+| `ADMOB_APP_ID` | AdMob app ID |
+| `ADMOB_BANNER_AD_UNIT_ID` | Banner ad unit ID |
+| `ADMOB_INTERSTITIAL_AD_UNIT_ID` | Interstitial ad unit ID |
+| `ADMOB_NATIVE_ADVANCED_AD_UNIT_ID` | Native advanced ad unit ID |
+
+### 16 KB page size
+
+All native libraries (FFmpeg suite, FFmpegKit, whisper.cpp, ML Kit, libc++_shared) are aligned at `0x4000` (16 KB) per [Android's 16 KB page size requirement](https://developer.android.com/guide/practices/page-sizes), thanks to NDK r28+. The CI pipeline gates every release on `zipalign -c -P 16`.
+
+</details>
+
+---
+
+## License
+
+App source: [MIT](LICENSE).
+Native dependencies (FFmpegKit Full **GPL**, whisper.cpp MIT, ML Kit per Google ToS) are licensed under their own terms — see each project for the exact requirements when redistributing compiled binaries.
+
+---
+
+<div align="center">
+  <sub>Built with care by <a href="https://github.com/chartmann1590">Charles Hartmann</a> · <a href="https://buymeacoffee.com/charleshartmann">Buy me a coffee ☕</a></sub>
+</div>

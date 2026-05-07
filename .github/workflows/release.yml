@@ -1,0 +1,188 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Stub local.properties
+        run: |
+          cat > local.properties <<EOF
+          admob.app.id=ca-app-pub-0000000000000000~0000000000
+          admob.banner.id=ca-app-pub-0000000000000000/0000000000
+          admob.interstitial.id=ca-app-pub-0000000000000000/0000000000
+          admob.native.advanced.id=ca-app-pub-0000000000000000/0000000000
+          EOF
+      - name: Run unit tests
+        run: ./gradlew testDebugUnitTest --no-daemon
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-reports
+          path: app/build/reports/tests/
+
+  build:
+    name: Build signed release
+    needs: test
+    runs-on: ubuntu-latest
+    outputs:
+      version_code: ${{ steps.version.outputs.code }}
+      version_name: ${{ steps.version.outputs.name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Compute version
+        id: version
+        run: |
+          CODE=$((${{ github.run_number }} + 100))
+          NAME="0.1.${{ github.run_number }}"
+          echo "code=$CODE" >> "$GITHUB_OUTPUT"
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "VERSION_CODE=$CODE" >> "$GITHUB_ENV"
+          echo "VERSION_NAME=$NAME" >> "$GITHUB_ENV"
+          echo "Building versionCode=$CODE versionName=$NAME"
+
+      - name: Decode keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          echo "KEYSTORE_FILE=$RUNNER_TEMP/upload.jks" >> "$GITHUB_ENV"
+
+      - name: Write local.properties from secrets
+        env:
+          ADMOB_APP_ID: ${{ secrets.ADMOB_APP_ID }}
+          ADMOB_BANNER_AD_UNIT_ID: ${{ secrets.ADMOB_BANNER_AD_UNIT_ID }}
+          ADMOB_INTERSTITIAL_AD_UNIT_ID: ${{ secrets.ADMOB_INTERSTITIAL_AD_UNIT_ID }}
+          ADMOB_NATIVE_ADVANCED_AD_UNIT_ID: ${{ secrets.ADMOB_NATIVE_ADVANCED_AD_UNIT_ID }}
+        run: |
+          cat > local.properties <<EOF
+          admob.app.id=$ADMOB_APP_ID
+          admob.banner.id=$ADMOB_BANNER_AD_UNIT_ID
+          admob.interstitial.id=$ADMOB_INTERSTITIAL_AD_UNIT_ID
+          admob.native.advanced.id=$ADMOB_NATIVE_ADVANCED_AD_UNIT_ID
+          EOF
+
+      - name: Assemble release APKs + AAB
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew :app:assembleRelease :app:bundleRelease --no-daemon
+
+      - name: Verify 16 KB page-size alignment (compliance gate)
+        run: |
+          BUILD_TOOLS=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)
+          ZIPALIGN="${BUILD_TOOLS}zipalign"
+          for apk in app/build/outputs/apk/release/*.apk; do
+            echo "::group::Checking $apk"
+            "$ZIPALIGN" -c -P 16 -v 4 "$apk"
+            echo "::endgroup::"
+          done
+
+      - name: Verify APK signatures
+        run: |
+          BUILD_TOOLS=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)
+          APKSIGNER="${BUILD_TOOLS}apksigner"
+          for apk in app/build/outputs/apk/release/*.apk; do
+            "$APKSIGNER" verify --print-certs "$apk" | head -5
+          done
+
+      - name: Collect release artifacts
+        run: |
+          mkdir -p staging
+          cp app/build/outputs/apk/release/*.apk staging/
+          cp app/build/outputs/bundle/release/*.aab staging/
+          if [ -f app/build/outputs/mapping/release/mapping.txt ]; then
+            cp app/build/outputs/mapping/release/mapping.txt staging/mapping-${{ steps.version.outputs.name }}.txt
+          fi
+          ls -la staging/
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts
+          path: staging/
+          retention-days: 30
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-artifacts
+          path: staging/
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          PREV=$(git tag --list 'v*' --sort=-version:refname | head -n 1)
+          {
+            echo "## CaptionBurn ${{ needs.build.outputs.version_name }}"
+            echo ""
+            echo "**versionCode**: \`${{ needs.build.outputs.version_code }}\`"
+            echo "**Built from**: \`${{ github.sha }}\`"
+            echo ""
+            echo "### Changes"
+            if [ -n "$PREV" ]; then
+              git log --pretty=format:'- %s' "$PREV"..HEAD
+            else
+              git log --pretty=format:'- %s' -n 20
+            fi
+            echo ""
+            echo ""
+            echo "### Artifacts"
+            echo "- \`app-arm64-v8a-release.apk\` — primary 64-bit ARM APK (most modern phones)"
+            echo "- \`app-armeabi-v7a-release.apk\` — 32-bit ARM APK (older devices)"
+            echo "- \`app-x86_64-release.apk\` — x86_64 APK (emulators / Chromebooks)"
+            echo "- \`app-release.aab\` — Android App Bundle (Play Store upload)"
+            echo "- \`mapping-${{ needs.build.outputs.version_name }}.txt\` — ProGuard/R8 mapping for crash deobfuscation"
+            echo ""
+            echo "All native libraries are 16 KB page-size aligned. Verified with \`zipalign -c -P 16\`."
+          } > release-notes.md
+          cat release-notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.build.outputs.version_name }}
+          name: CaptionBurn ${{ needs.build.outputs.version_name }}
+          body_path: release-notes.md
+          files: staging/*
+          make_latest: "true"
+          fail_on_unmatched_files: true

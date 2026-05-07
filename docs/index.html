@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CaptionBurn — Captions, on-device.</title>
+  <meta name="description" content="Auto-caption your videos and burn the subtitles in — entirely on your phone. 99 languages transcribed, 50+ translated, no cloud uploads." />
+  <meta name="theme-color" content="#0b0810" />
+
+  <!-- Open Graph / Twitter -->
+  <meta property="og:title" content="CaptionBurn — Captions, on-device." />
+  <meta property="og:description" content="Auto-caption your videos and burn the subtitles in — entirely on your phone. 99 languages transcribed, 50+ translated, no cloud uploads." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://chartmann1590.github.io/captionburn/" />
+  <meta property="og:image" content="https://chartmann1590.github.io/captionburn/assets/og.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="CaptionBurn — Captions, on-device." />
+  <meta name="twitter:description" content="Auto-caption your videos. On-device. No cloud." />
+  <meta name="twitter:image" content="https://chartmann1590.github.io/captionburn/assets/og.png" />
+
+  <link rel="icon" type="image/png" href="assets/icon.png" />
+  <link rel="apple-touch-icon" href="assets/icon.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a class="brand" href="#top">
+        <img src="assets/icon.png" alt="" />
+        <span>CaptionBurn</span>
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#how">How it works</a>
+        <a href="#privacy">Privacy</a>
+        <a href="https://github.com/chartmann1590/captionburn">GitHub</a>
+        <a class="nav-cta" href="https://github.com/chartmann1590/captionburn/releases/latest">Download</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero" id="top">
+    <div class="container hero-grid">
+      <div>
+        <span class="eyebrow"><span class="dot"></span>Captions, on-device.</span>
+        <h1>Auto-caption your videos.</h1>
+        <p class="lede">Pick a video. Get accurate, word-timed captions in seconds. Style them to taste. Burn them in. <strong>All on your phone — no cloud, no uploads.</strong></p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="https://github.com/chartmann1590/captionburn/releases/latest">
+            ↓ Download latest release
+          </a>
+          <a class="btn btn-coffee" href="https://buymeacoffee.com/charleshartmann">
+            ☕ Buy me a coffee
+          </a>
+          <a class="btn btn-ghost" href="https://github.com/chartmann1590/captionburn">View on GitHub</a>
+        </div>
+      </div>
+      <div>
+        <div class="hero-video-wrap">
+          <video id="hero-video" autoplay muted loop playsinline poster="assets/editor.png">
+            <source src="assets/promo.mp4" type="video/mp4" />
+          </video>
+          <button class="unmute-btn" type="button" id="unmute-btn" aria-label="Unmute video">🔇</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section>
+    <div class="container">
+      <span class="section-eyebrow">Why CaptionBurn</span>
+      <h2 class="section-title">Built for creators who care about privacy and speed.</h2>
+      <p class="section-lede">No login. No subscription. No cloud upload. The entire pipeline — speech recognition, translation, caption rendering — runs on your phone.</p>
+
+      <div class="values">
+        <div class="value-card">
+          <div class="icon">🔒</div>
+          <h3>Privacy-first</h3>
+          <p>Your video and transcript never leave your device. Transcription runs locally with Whisper. Translation runs locally with ML Kit. Zero accounts, zero telemetry.</p>
+        </div>
+        <div class="value-card">
+          <div class="icon">⚡</div>
+          <h3>Fast</h3>
+          <p>On-device transcription with word-level timing. Pick a video, get captions in seconds. No upload waits, no queues, no monthly limits.</p>
+        </div>
+        <div class="value-card">
+          <div class="icon">🎨</div>
+          <h3>Total control</h3>
+          <p>Edit every caption before you export. Pick the font size, position, outline, color, and word-highlight effect. Translate to a second language if you want.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="container">
+      <span class="section-eyebrow">Features</span>
+      <h2 class="section-title">Everything you need to ship a captioned video.</h2>
+      <p class="section-lede">From import to export in three taps. Edit anything in between.</p>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="shot"><img src="assets/onboarding.png" alt="Onboarding screen with model selection" /></div>
+          <h4>Pick your speed</h4>
+          <p>Choose between Tiny, Base, or Small Whisper models on first launch. Trade size for accuracy — switch any time in Settings.</p>
+        </div>
+        <div class="feature-card">
+          <div class="shot"><img src="assets/home.png" alt="Home screen with project library" /></div>
+          <h4>Project library</h4>
+          <p>Every video you caption stays organized. Resume, re-style, or re-export at will.</p>
+        </div>
+        <div class="feature-card">
+          <div class="shot"><img src="assets/editor.png" alt="Editor with live caption preview" /></div>
+          <h4>Live editor</h4>
+          <p>Tap a caption to fix a word. Adjust word timing. Toggle Original / Translated / Both with one tap.</p>
+        </div>
+        <div class="feature-card">
+          <div class="shot"><img src="assets/style-controls.png" alt="Caption style controls" /></div>
+          <h4>Style controls</h4>
+          <p>Size 36–110, 9 positions, outline 0–8, 5 text colors, 5 highlight colors, 4 word-effect styles — none, fill, grow, underline.</p>
+        </div>
+        <div class="feature-card">
+          <div class="shot"><img src="assets/export.png" alt="Export progress screen" /></div>
+          <h4>Burn &amp; share</h4>
+          <p>Captions are baked into the pixels. Export to your gallery, share to any platform — no separate subtitle file needed.</p>
+        </div>
+        <div class="feature-card">
+          <div class="shot"><img src="assets/settings.png" alt="Settings screen" /></div>
+          <h4>Manage your models</h4>
+          <p>Switch between Whisper sizes, re-download translation packs, or set Wi-Fi-only downloads to keep cellular data quiet.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="container">
+      <span class="section-eyebrow">How it works</span>
+      <h2 class="section-title">Four taps from raw footage to captioned video.</h2>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <h4>Import</h4>
+          <p>Pick any video from your gallery via the system Photo Picker.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <h4>Transcribe</h4>
+          <p>Whisper runs locally and returns word-timed captions.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <h4>Style</h4>
+          <p>Choose size, position, color, outline, and word effect.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <h4>Export</h4>
+          <p>FFmpeg burns the captions into the pixels and saves to your gallery.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <span class="section-eyebrow">Languages</span>
+      <h2 class="section-title">Speak any language. Translate to anyone.</h2>
+
+      <div class="langs-strip">
+        <div class="lang-cell">
+          <div class="lang-num">99</div>
+          <h4>Languages transcribed</h4>
+          <p>Whisper auto-detects the spoken language and produces word-level captions for any of its 99 supported languages.</p>
+        </div>
+        <div class="lang-cell">
+          <div class="lang-num">50+</div>
+          <h4>Languages translated</h4>
+          <p>Tap a language; ML Kit downloads a small pack and translates the captions on-device. Show original, translated, or both.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="privacy">
+    <div class="container">
+      <span class="section-eyebrow">Privacy</span>
+      <h2 class="section-title">Your video stays on your device. Period.</h2>
+      <div class="privacy-callout">
+        <div class="lock">🔒</div>
+        <div>
+          <h3>No uploads. No accounts. No telemetry.</h3>
+          <p>The Whisper speech model and ML Kit translation packs are downloaded once from public CDNs. Your captions, your transcripts, and your videos are processed entirely on your phone.</p>
+        </div>
+        <a class="btn btn-ghost" href="privacy.html">Read privacy policy →</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="download">
+    <div class="container">
+      <div class="download">
+        <h2>Get CaptionBurn</h2>
+        <p>Until the Play Store listing is live, install directly from the GitHub Releases page. APKs for arm64, arm32, and x86_64.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="https://github.com/chartmann1590/captionburn/releases/latest">↓ Download latest release</a>
+          <a class="btn btn-coffee" href="https://buymeacoffee.com/charleshartmann">☕ Buy me a coffee</a>
+          <a class="btn btn-ghost" href="https://github.com/chartmann1590/captionburn">View source</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div>© 2026 Charles Hartmann · MIT-licensed.</div>
+      <div>
+        <a href="privacy.html">Privacy</a>
+        <a href="https://github.com/chartmann1590/captionburn">GitHub</a>
+        <a href="https://github.com/chartmann1590/captionburn/releases">Releases</a>
+        <a class="footer-coffee" href="https://buymeacoffee.com/charleshartmann">☕ Buy me a coffee</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const v = document.getElementById('hero-video');
+    const btn = document.getElementById('unmute-btn');
+    btn.addEventListener('click', () => {
+      v.muted = !v.muted;
+      btn.textContent = v.muted ? '🔇' : '🔊';
+      if (!v.muted) v.play();
+    });
+  </script>
+
+</body>
+</html>
