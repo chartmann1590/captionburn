@@ -1,0 +1,11 @@
+Promo video file:  ../04-promo-video/captionburn-promo-vertical-voiceover.mp4
+
+Play Console accepts a YouTube URL only (not a direct upload). Workflow:
+  1. Upload captionburn-promo-vertical-voiceover.mp4 to YouTube
+     - Visibility: Unlisted (or Public)
+     - Title: "CaptionBurn — Captions, on-device."
+     - Description: copy from 01-listing/short-description.txt
+  2. Paste the resulting URL in Play Console → Store presence → Main store listing → Promo video
+  3. Save the URL here for reference:
+
+YouTube URL: <paste here once uploaded>

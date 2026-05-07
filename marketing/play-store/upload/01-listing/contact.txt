@@ -1,0 +1,11 @@
+Developer name:   Charles Hartmann
+Contact email:    charles.h.hartmann1@gmail.com
+Website:          https://chartmann1590.github.io/captionburn/
+Privacy policy:   https://chartmann1590.github.io/captionburn/privacy.html
+
+Category:         Video Players & Editors
+Tags (≤5):        video, captions, subtitles, accessibility, transcription
+Free / paid:      Free
+Contains ads:     Yes
+In-app purchases: No
+Target audience:  13+
