@@ -31,6 +31,8 @@ jobs:
           admob.interstitial.id=ca-app-pub-0000000000000000/0000000000
           admob.native.advanced.id=ca-app-pub-0000000000000000/0000000000
           EOF
+      - name: Make gradlew executable
+        run: chmod +x gradlew
       - name: Run unit tests
         run: ./gradlew testDebugUnitTest --no-daemon
       - name: Upload test reports
@@ -90,6 +92,9 @@ jobs:
           admob.interstitial.id=$ADMOB_INTERSTITIAL_AD_UNIT_ID
           admob.native.advanced.id=$ADMOB_NATIVE_ADVANCED_AD_UNIT_ID
           EOF
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
 
       - name: Assemble release APKs + AAB
         env:
