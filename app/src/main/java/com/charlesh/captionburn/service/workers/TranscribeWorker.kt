@@ -22,6 +22,7 @@ class TranscribeWorker @AssistedInject constructor(
     private val projects: ProjectRepository,
     private val settings: SettingsRepository,
     private val transcriptionService: TranscriptionService,
+    private val telemetry: com.charlesh.captionburn.data.telemetry.TelemetryTracker,
 ) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result {
@@ -35,6 +36,14 @@ class TranscribeWorker @AssistedInject constructor(
 
         val model = settings.installedModel.first()
             ?: return Result.failure(PipelineWorkData.failure("No Whisper model configured. Complete onboarding first.", retryable = false))
+
+        telemetry.logEvent("transcribe_started", mapOf(
+            "projectId" to projectId,
+            "model" to model.name
+        ))
+        val trace = telemetry.startTrace("transcribe_job_duration")
+        trace.putAttribute("model", model.name)
+
         val lastProgress = transcriptionService.transcribe(
             sourceUri = Uri.parse(project.sourceUri),
             projectId = projectId,
@@ -51,6 +60,13 @@ class TranscribeWorker @AssistedInject constructor(
 
         return when (lastProgress) {
             is TranscriptionProgress.Done -> {
+                telemetry.logEvent("transcribe_success", mapOf(
+                    "projectId" to projectId,
+                    "model" to model.name
+                ))
+                trace.putAttribute("status", "success")
+                trace.stop()
+
                 projects.updateProject(projectId) {
                     it.copy(
                         status = ProjectStatus.Ready,
@@ -61,6 +77,17 @@ class TranscribeWorker @AssistedInject constructor(
                 Result.success()
             }
             is TranscriptionProgress.Failed -> {
+                telemetry.logEvent("transcribe_failed", mapOf(
+                    "projectId" to projectId,
+                    "model" to model.name,
+                    "stage" to lastProgress.stage.name,
+                    "error" to lastProgress.userMessage
+                ))
+                trace.putAttribute("status", "failed")
+                trace.putAttribute("stage", lastProgress.stage.name)
+                trace.putAttribute("error_type", lastProgress.cause.javaClass.simpleName)
+                trace.stop()
+
                 projects.updateProject(projectId) {
                     it.copy(status = ProjectStatus.Failed, errorMessage = lastProgress.userMessage)
                 }
@@ -75,7 +102,17 @@ class TranscribeWorker @AssistedInject constructor(
                     )
                 }
             }
-            else -> Result.failure(PipelineWorkData.failure("Transcription failed", retryable = true))
+            else -> {
+                telemetry.logEvent("transcribe_failed", mapOf(
+                    "projectId" to projectId,
+                    "model" to model.name,
+                    "error" to "Unknown state"
+                ))
+                trace.putAttribute("status", "failed")
+                trace.putAttribute("error_type", "UnknownState")
+                trace.stop()
+                Result.failure(PipelineWorkData.failure("Transcription failed", retryable = true))
+            }
         }
     }
 }

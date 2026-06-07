@@ -51,4 +51,9 @@ object AppModule {
         translator = translator,
         ioDispatcher = ioDispatcher,
     )
+
+    @Provides @Singleton
+    fun provideTelemetryTracker(
+        telemetryManager: com.charlesh.captionburn.data.telemetry.TelemetryManager
+    ): com.charlesh.captionburn.data.telemetry.TelemetryTracker = telemetryManager
 }

@@ -19,6 +19,7 @@ import okhttp3.Request
 import okio.buffer
 import okio.sink
 import timber.log.Timber
+import com.charlesh.captionburn.data.telemetry.TelemetryTracker
 
 sealed interface DownloadEvent {
     data class Progress(val bytesRead: Long, val total: Long) : DownloadEvent
@@ -43,6 +44,7 @@ class ModelDownloader @Inject constructor(
     private val client: OkHttpClient,
     @AppFiles private val filesDir: File,
     @IoDispatcher private val io: CoroutineDispatcher,
+    private val telemetry: TelemetryTracker,
 ) {
     fun modelsDir(): File = File(filesDir, "models").apply { mkdirs() }
 
@@ -69,6 +71,15 @@ class ModelDownloader @Inject constructor(
         val target = fileFor(spec)
         val partial = File(modelsDir(), "${spec.filename}.part")
         val haveBytes = if (partial.exists()) partial.length() else 0L
+
+        val trace = telemetry.startTrace("model_download_duration")
+        trace.putAttribute("model_choice", spec.choice.name)
+        trace.putAttribute("filename", spec.filename)
+        telemetry.logEvent("model_download_started", mapOf(
+            "model_choice" to spec.choice.name,
+            "filename" to spec.filename,
+            "resuming" to (haveBytes > 0L)
+        ))
 
         try {
             val req = Request.Builder()
@@ -139,10 +150,25 @@ class ModelDownloader @Inject constructor(
             }
 
             Timber.i("Model downloaded: %s (%d bytes)", target.name, target.length())
+            telemetry.logEvent("model_download_success", mapOf(
+                "model_choice" to spec.choice.name,
+                "filename" to spec.filename,
+                "size_bytes" to target.length()
+            ))
+            trace.putAttribute("status", "success")
+            trace.stop()
             trySend(DownloadEvent.Complete(target))
             close()
         } catch (t: Throwable) {
             Timber.e(t, "Model download failed")
+            telemetry.logEvent("model_download_failed", mapOf(
+                "model_choice" to spec.choice.name,
+                "filename" to spec.filename,
+                "error" to (t.message ?: t.javaClass.simpleName)
+            ))
+            trace.putAttribute("status", "failed")
+            trace.putAttribute("error_type", t.javaClass.simpleName)
+            trace.stop()
             trySend(DownloadEvent.Failed(t))
             close(t)
         }

@@ -27,6 +27,7 @@ class ModelDownloaderTest {
             client = fakeClient(modelBytes = modelBytes, sidecarCode = 404),
             filesDir = temp.newFolder(),
             io = Dispatchers.Unconfined,
+            telemetry = io.mockk.mockk(relaxed = true),
         )
 
         val events = downloader.download(testSpec(sha256 = null)).toList()
@@ -50,6 +51,7 @@ class ModelDownloaderTest {
             ),
             filesDir = filesDir,
             io = Dispatchers.Unconfined,
+            telemetry = io.mockk.mockk(relaxed = true),
         )
 
         val events = downloader.download(testSpec(sha256 = null)).toList()

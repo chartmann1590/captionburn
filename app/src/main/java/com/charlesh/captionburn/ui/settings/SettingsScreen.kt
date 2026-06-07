@@ -119,6 +119,27 @@ fun SettingsScreen(
                     onCheckedChange = { viewModel.toggleWifiOnly() },
                 )
             }
+            Spacer(Modifier.height(16.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "Share usage & errors",
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                    Text(
+                        "Help improve the app by sharing anonymous crash logs and telemetry.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(
+                    checked = state.telemetryEnabled,
+                    onCheckedChange = { viewModel.toggleTelemetry() },
+                )
+            }
             AnimatedVisibility(visible = state.errorMessage != null) {
                 Card(
                     colors = CardDefaults.cardColors(

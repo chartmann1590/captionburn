@@ -7,6 +7,9 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.crashlytics)
+    alias(libs.plugins.firebase.perf)
 }
 
 val localProperties = Properties().apply {
@@ -78,6 +81,9 @@ android {
         debug {
             applicationIdSuffix = ".debug"
             isDebuggable = true
+            configure<com.google.firebase.perf.plugin.FirebasePerfExtension> {
+                setInstrumentationEnabled(false)
+            }
         }
     }
 
@@ -173,6 +179,11 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.video)
     implementation(libs.play.services.ads)
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.perf)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
 

@@ -32,13 +32,15 @@ class SettingsViewModel @Inject constructor(
             combine(
                 settingsRepository.installedModel,
                 settingsRepository.wifiOnlyDownloads,
-            ) { installedModel, wifiOnly ->
-                installedModel to wifiOnly
-            }.collect { (installedModel, wifiOnly) ->
+                settingsRepository.telemetryEnabled,
+            ) { installedModel, wifiOnly, telemetryEnabled ->
+                Triple(installedModel, wifiOnly, telemetryEnabled)
+            }.collect { (installedModel, wifiOnly, telemetryEnabled) ->
                 _state.update {
                     it.copy(
                         installedModel = installedModel,
                         wifiOnly = wifiOnly,
+                        telemetryEnabled = telemetryEnabled,
                     )
                 }
             }
@@ -48,6 +50,12 @@ class SettingsViewModel @Inject constructor(
     fun toggleWifiOnly() {
         viewModelScope.launch {
             settingsRepository.setWifiOnly(!_state.value.wifiOnly)
+        }
+    }
+
+    fun toggleTelemetry() {
+        viewModelScope.launch {
+            settingsRepository.setTelemetryEnabled(!_state.value.telemetryEnabled)
         }
     }
 
@@ -134,6 +142,7 @@ class SettingsViewModel @Inject constructor(
 data class SettingsState(
     val installedModel: WhisperModelChoice? = null,
     val wifiOnly: Boolean = true,
+    val telemetryEnabled: Boolean = true,
     val isDownloading: Boolean = false,
     val activeModelChoice: WhisperModelChoice? = null,
     val downloadProgress: Float = 0f,

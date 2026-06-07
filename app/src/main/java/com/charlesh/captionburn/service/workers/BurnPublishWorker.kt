@@ -19,6 +19,7 @@ class BurnPublishWorker @AssistedInject constructor(
     @Assisted params: WorkerParameters,
     private val projects: ProjectRepository,
     private val ffmpegBurner: FFmpegBurner,
+    private val telemetry: com.charlesh.captionburn.data.telemetry.TelemetryTracker,
 ) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result {
@@ -32,6 +33,13 @@ class BurnPublishWorker @AssistedInject constructor(
         projects.updateProject(projectId) { it.copy(status = ProjectStatus.Burning, errorMessage = null) }
         setProgress(PipelineWorkData.progress(stage = "burn-publish", progress = 0.8f))
 
+        telemetry.logEvent("ffmpeg_burn_started", mapOf(
+            "projectId" to projectId,
+            "durationMs" to project.durationMs
+        ))
+        val trace = telemetry.startTrace("ffmpeg_burn_duration")
+        trace.putAttribute("project_id", projectId)
+
         return ffmpegBurner.burnAndPublish(
             sourceUri = Uri.parse(project.sourceUri),
             assFile = File(assPath),
@@ -42,6 +50,13 @@ class BurnPublishWorker @AssistedInject constructor(
             setProgressAsync(PipelineWorkData.progress("burn-publish", 0.8f + (stageProgress * 0.2f)))
         }.fold(
             onSuccess = { burnResult ->
+                telemetry.logEvent("ffmpeg_burn_success", mapOf(
+                    "projectId" to projectId,
+                    "durationMs" to project.durationMs
+                ))
+                trace.putAttribute("status", "success")
+                trace.stop()
+
                 File(assPath).delete()
                 projects.updateProject(projectId) {
                     it.copy(
@@ -58,6 +73,14 @@ class BurnPublishWorker @AssistedInject constructor(
             },
             onFailure = { error ->
                 val message = error.message ?: "Export failed"
+                telemetry.logEvent("ffmpeg_burn_failed", mapOf(
+                    "projectId" to projectId,
+                    "error" to message
+                ))
+                trace.putAttribute("status", "failed")
+                trace.putAttribute("error_type", error.javaClass.simpleName)
+                trace.stop()
+
                 projects.updateProject(projectId) { it.copy(status = ProjectStatus.Failed, errorMessage = message) }
                 if (runAttemptCount < 2) {
                     Result.retry()

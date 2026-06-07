@@ -13,6 +13,7 @@ import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.Translator
 import com.google.mlkit.nl.translate.TranslatorOptions
 import dagger.hilt.android.qualifiers.ApplicationContext
+import com.charlesh.captionburn.data.telemetry.TelemetryTracker
 import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -28,6 +29,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 class MlKitTranslator @Inject constructor(
     @ApplicationContext private val context: Context,
     private val settingsRepository: SettingsRepository,
+    private val telemetry: TelemetryTracker,
 ) {
 
     fun supportedLanguages(): List<TranslationLanguage> {
@@ -51,12 +53,30 @@ class MlKitTranslator @Inject constructor(
         whileDownloadingModel: suspend CoroutineScope.() -> Unit = {},
     ): String {
         if (text.isBlank()) return text
-        val source = sourceLanguage.toMlKitLanguage()
-        val target = targetLanguage.toMlKitLanguage()
-        if (source == target) return text
+        telemetry.logEvent("translation_started", mapOf(
+            "source" to sourceLanguage,
+            "target" to targetLanguage
+        ))
+        try {
+            val source = sourceLanguage.toMlKitLanguage()
+            val target = targetLanguage.toMlKitLanguage()
+            if (source == target) return text
 
-        return withTranslator(source, target, whileDownloadingModel) { translator ->
-            translator.translate(text).awaitResult()
+            val result = withTranslator(source, target, whileDownloadingModel) { translator ->
+                translator.translate(text).awaitResult()
+            }
+            telemetry.logEvent("translation_success", mapOf(
+                "source" to sourceLanguage,
+                "target" to targetLanguage
+            ))
+            return result
+        } catch (t: Throwable) {
+            telemetry.logEvent("translation_failed", mapOf(
+                "source" to sourceLanguage,
+                "target" to targetLanguage,
+                "error" to (t.message ?: t.javaClass.simpleName)
+            ))
+            throw t
         }
     }
 
@@ -68,17 +88,37 @@ class MlKitTranslator @Inject constructor(
         onProgress: ((completed: Int, total: Int) -> Unit)? = null,
     ): List<String> {
         if (texts.isEmpty()) return emptyList()
-        val source = sourceLanguage.toMlKitLanguage()
-        val target = targetLanguage.toMlKitLanguage()
-        if (source == target) return texts
+        telemetry.logEvent("translation_batch_started", mapOf(
+            "source" to sourceLanguage,
+            "target" to targetLanguage,
+            "count" to texts.size
+        ))
+        try {
+            val source = sourceLanguage.toMlKitLanguage()
+            val target = targetLanguage.toMlKitLanguage()
+            if (source == target) return texts
 
-        return withTranslator(source, target, whileDownloadingModel) { translator ->
-            val total = texts.size
-            texts.mapIndexed { index, text ->
-                val translated = if (text.isBlank()) text else translator.translate(text).awaitResult()
-                onProgress?.invoke(index + 1, total)
-                translated
+            val result = withTranslator(source, target, whileDownloadingModel) { translator ->
+                val total = texts.size
+                texts.mapIndexed { index, text ->
+                    val translated = if (text.isBlank()) text else translator.translate(text).awaitResult()
+                    onProgress?.invoke(index + 1, total)
+                    translated
+                }
             }
+            telemetry.logEvent("translation_batch_success", mapOf(
+                "source" to sourceLanguage,
+                "target" to targetLanguage,
+                "count" to texts.size
+            ))
+            return result
+        } catch (t: Throwable) {
+            telemetry.logEvent("translation_batch_failed", mapOf(
+                "source" to sourceLanguage,
+                "target" to targetLanguage,
+                "error" to (t.message ?: t.javaClass.simpleName)
+            ))
+            throw t
         }
     }
 
