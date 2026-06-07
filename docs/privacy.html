@@ -32,7 +32,7 @@
   <main class="legal">
     <a class="legal-back" href="index.html">← Back to CaptionBurn</a>
     <h1>Privacy Policy</h1>
-    <p class="updated">Last updated: 2026-05-07</p>
+    <p class="updated">Last updated: 2026-06-07</p>
 
     <p>CaptionBurn is an Android application built and maintained by Charles Hartmann. This policy explains, in plain English, what data the app handles, what stays on your device, and what is sent to third parties.</p>
 
@@ -43,13 +43,24 @@
       <li><strong>Speech recognition runs locally</strong> using <a href="https://github.com/ggerganov/whisper.cpp">Whisper</a>. The speech model is downloaded once from a public CDN (HuggingFace), then runs offline.</li>
       <li><strong>Translation runs locally</strong> using Google ML Kit. Translation language packs are downloaded from Google's CDN; your text is not uploaded to translate.</li>
       <li><strong>The app shows ads</strong> via Google AdMob. AdMob receives standard ad-platform information (advertising ID, IP, ad interactions). No content from your videos or transcripts is shared with AdMob.</li>
-      <li><strong>We have no servers, no accounts, and no analytics.</strong> There is nothing for us to lose, leak, or sell.</li>
+      <li><strong>Optional, anonymous telemetry.</strong> If you opt in, we use Google Firebase (Analytics, Crashlytics, and Performance Monitoring) to troubleshoot app crashes and optimize speed. You can toggle this off at any time in settings.</li>
     </ul>
 
     <h2>2. Data we collect</h2>
-    <p><strong>None.</strong> CaptionBurn has no backend. The developer does not receive any information about you, your device, or your usage.</p>
+    <p>We do not collect or request any personally identifiable information. However, if you explicitly opt in by enabling <strong>"Share usage & errors"</strong> in Settings, CaptionBurn collects anonymous usage events, diagnostics, and performance data (via Google Firebase) to help the developer identify crashes, monitor transcription performance, and improve the app. This anonymous data is associated with a randomly generated User UUID stored locally on your device.</p>
 
     <h2>3. Data third-party SDKs collect</h2>
+
+    <h3>Google Firebase (Google LLC)</h3>
+    <p>If you opt-in to telemetry via the app settings, Firebase (including Firebase Analytics, Crashlytics, and Performance Monitoring) may collect:</p>
+    <ul>
+      <li>Crash and error logs, including stack traces and key device diagnostics (such as approximate free RAM, low RAM flags, and free disk space at the time of the error)</li>
+      <li>App performance measurements (such as durations of transcription, translation, speech model downloads, and video rendering)</li>
+      <li>App usage statistics (such as downloading a model or changing language settings)</li>
+      <li>An anonymous, randomly generated User UUID (this is not linked to any personal data)</li>
+      <li>Coarse device information (model name, operating system version, and app version)</li>
+    </ul>
+    <p>You can opt out of this telemetry at any time by turning off the <strong>"Share usage & errors"</strong> toggle in Settings. Firebase's data practices are detailed in Google's Privacy Policy: <a href="https://policies.google.com/privacy">https://policies.google.com/privacy</a>.</p>
 
     <h3>Google AdMob (Google LLC)</h3>
     <p>Used to serve banner and interstitial ads. AdMob may collect:</p>
