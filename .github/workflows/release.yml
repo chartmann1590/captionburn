@@ -30,6 +30,9 @@ jobs:
           admob.banner.id=ca-app-pub-0000000000000000/0000000000
           admob.interstitial.id=ca-app-pub-0000000000000000/0000000000
           admob.native.advanced.id=ca-app-pub-0000000000000000/0000000000
+          github.api.token=
+          github.repo.owner=chartmann1590
+          github.repo.name=captionburn
           EOF
       - name: Make gradlew executable
         run: chmod +x gradlew
@@ -85,12 +88,18 @@ jobs:
           ADMOB_BANNER_AD_UNIT_ID: ${{ secrets.ADMOB_BANNER_AD_UNIT_ID }}
           ADMOB_INTERSTITIAL_AD_UNIT_ID: ${{ secrets.ADMOB_INTERSTITIAL_AD_UNIT_ID }}
           ADMOB_NATIVE_ADVANCED_AD_UNIT_ID: ${{ secrets.ADMOB_NATIVE_ADVANCED_AD_UNIT_ID }}
+          GITHUB_API_TOKEN: ${{ secrets.GH_API_TOKEN }}
+          GITHUB_REPO_OWNER: ${{ secrets.GH_REPO_OWNER }}
+          GITHUB_REPO_NAME: ${{ secrets.GH_REPO_NAME }}
         run: |
           cat > local.properties <<EOF
           admob.app.id=$ADMOB_APP_ID
           admob.banner.id=$ADMOB_BANNER_AD_UNIT_ID
           admob.interstitial.id=$ADMOB_INTERSTITIAL_AD_UNIT_ID
           admob.native.advanced.id=$ADMOB_NATIVE_ADVANCED_AD_UNIT_ID
+          github.api.token=$GITHUB_API_TOKEN
+          github.repo.owner=${GITHUB_REPO_OWNER:-chartmann1590}
+          github.repo.name=${GITHUB_REPO_NAME:-captionburn}
           EOF
 
       - name: Make gradlew executable
