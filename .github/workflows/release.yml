@@ -102,6 +102,12 @@ jobs:
           github.repo.name=${GITHUB_REPO_NAME:-captionburn}
           EOF
 
+      - name: Inject Google Services API Key
+        env:
+          GOOGLE_SERVICES_API_KEY: ${{ secrets.GOOGLE_SERVICES_API_KEY }}
+        run: |
+          sed -i "s/GOOGLE_SERVICES_API_KEY_PLACEHOLDER/$GOOGLE_SERVICES_API_KEY/g" app/google-services.json
+
       - name: Make gradlew executable
         run: chmod +x gradlew
 
