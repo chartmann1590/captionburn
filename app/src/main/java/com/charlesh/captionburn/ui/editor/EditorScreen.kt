@@ -1,5 +1,7 @@
 package com.charlesh.captionburn.ui.editor
 
+import android.content.res.Configuration
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -56,6 +58,103 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
+private fun VideoPlayerBox(
+    player: ExoPlayer?,
+    state: EditorState,
+    modifier: Modifier = Modifier,
+) {
+    Surface(modifier = modifier, shape = RoundedCornerShape(20.dp)) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (player != null) {
+                AndroidView(
+                    modifier = Modifier.fillMaxSize(),
+                    factory = { context ->
+                        PlayerView(context).apply {
+                            useController = true
+                            this.player = player
+                        }
+                    },
+                )
+            } else {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.Rounded.PlayArrow,
+                        contentDescription = null,
+                    )
+                }
+            }
+            CaptionOverlay(
+                style = state.style,
+                activeWords = state.activeWords,
+                activeTranslationWords = state.activeTranslationWords,
+                playbackPositionMs = state.playbackPositionMs,
+                modifier = Modifier.matchParentSize(),
+            )
+        }
+    }
+}
+
+@Composable
+private fun TranscriptionStatusCard(
+    state: EditorState,
+    onRetry: () -> Unit,
+    onStartManual: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    AnimatedVisibility(
+        visible = state.isLoading || state.isTranscribing || state.transcript == null || state.errorMessage != null,
+        modifier = modifier,
+    ) {
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = if (state.errorMessage == null) {
+                    MaterialTheme.colorScheme.secondaryContainer
+                } else {
+                    MaterialTheme.colorScheme.errorContainer
+                },
+                contentColor = if (state.errorMessage == null) {
+                    MaterialTheme.colorScheme.onSecondaryContainer
+                } else {
+                    MaterialTheme.colorScheme.onErrorContainer
+                },
+            ),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Column(
+                modifier = Modifier.padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(
+                    when {
+                        state.errorMessage != null -> state.errorMessage.orEmpty()
+                        state.isTranscribing -> "Transcribing on-device: ${state.transcriptionStage ?: "starting"}"
+                        state.isLoading -> "Loading project..."
+                        else -> "Waiting for the on-device transcript."
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                if (state.isTranscribing) {
+                    LinearProgressIndicator(
+                        progress = { state.transcriptionProgress.coerceIn(0f, 1f) },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+                if (state.canRetryTranscription) {
+                    TextButton(onClick = onRetry) {
+                        Text(stringResource(R.string.error_retry))
+                    }
+                }
+                if (state.canStartTranscription) {
+                    TextButton(onClick = onStartManual) {
+                        Text(stringResource(R.string.editor_start_transcription))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun EditorScreen(
     projectId: String,
     viewModel: EditorViewModel,
@@ -65,6 +164,8 @@ fun EditorScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val sourceUri = state.sourceUri
     val context = LocalContext.current
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     LaunchedEffect(projectId) { viewModel.bindProject(projectId) }
     val player = remember(sourceUri, context) {
@@ -89,139 +190,177 @@ fun EditorScreen(
     var showStyleSheet by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.systemBars),
-    ) {
+    if (isLandscape) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.systemBars)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null)
-            }
-            Text(
-                "Editor",
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.weight(1f),
-            )
-        }
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(250.dp)
-                .padding(horizontal = 16.dp)
-                .clip(RoundedCornerShape(20.dp)),
-            contentAlignment = Alignment.Center,
-        ) {
-            Surface(modifier = Modifier.fillMaxSize(), shape = RoundedCornerShape(20.dp)) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    if (player != null) {
-                        AndroidView(
-                            modifier = Modifier.fillMaxSize(),
-                            factory = { context ->
-                                PlayerView(context).apply {
-                                    useController = true
-                                    this.player = player
-                                }
-                            },
-                        )
-                    } else {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Icon(
-                                Icons.Rounded.PlayArrow,
-                                contentDescription = null,
-                            )
-                        }
+            // Left column: Player
+            Column(
+                modifier = Modifier.weight(1.2f),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
                     }
-                    CaptionOverlay(
-                        style = state.style,
-                        activeWords = state.activeWords,
-                        activeTranslationWords = state.activeTranslationWords,
-                        playbackPositionMs = state.playbackPositionMs,
-                        modifier = Modifier.matchParentSize(),
+                    Text(
+                        "Editor",
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+                }
+
+                VideoPlayerBox(
+                    player = player,
+                    state = state,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .clip(RoundedCornerShape(20.dp)),
+                )
+            }
+
+            // Right column: Controls & Transcript
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        "Project: ${state.projectName.ifBlank { projectId }}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(1f),
+                    )
+                    TextButton(onClick = { showStyleSheet = true }) {
+                        Text("Style controls")
+                    }
+                }
+
+                TranscriptionStatusCard(
+                    state = state,
+                    onRetry = viewModel::retryTranscription,
+                    onStartManual = viewModel::startTranscriptionManually,
+                )
+
+                LanguageBar(
+                    displayMode = state.style.displayMode,
+                    detectedLanguage = state.transcript?.detectedLanguage,
+                    targetLanguage = state.style.targetLanguage,
+                    supportedLanguages = state.supportedTargetLanguages,
+                    onDisplayModeChange = viewModel::setDisplayMode,
+                    onTargetLanguageChange = viewModel::setTargetLanguage,
+                )
+
+                AnimatedVisibility(visible = state.showTranslationModeHint) {
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.editor_translation_hint_original_mode),
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(12.dp),
+                        )
+                    }
+                }
+
+                TranscriptList(
+                    segments = state.transcript?.segments.orEmpty(),
+                    selectedSegmentId = state.selectedSegmentId,
+                    onSelectSegment = { segment: Segment ->
+                        viewModel.selectSegment(segment.id)
+                        player?.seekTo(segment.startMs)
+                    },
+                    onEditSegmentText = viewModel::editSegmentText,
+                    onNudgeSegment = viewModel::nudgeSegment,
+                    modifier = Modifier.weight(1f),
+                )
+
+                Button(
+                    onClick = onExport,
+                    enabled = state.transcript?.segments?.isNotEmpty() == true && !state.isTranscribing,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = RoundedCornerShape(18.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                    ),
+                ) {
+                    Text(
+                        stringResource(R.string.editor_export),
+                        style = MaterialTheme.typography.titleMedium,
                     )
                 }
             }
         }
-
+    } else {
+        // Portrait Layout
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp)
-                .verticalScroll(rememberScrollState())
-                .padding(bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+                .windowInsetsPadding(WindowInsets.systemBars)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                }
+                Text(
+                    "Editor",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+
+            VideoPlayerBox(
+                player = player,
+                state = state,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1.1f)
+                    .clip(RoundedCornerShape(20.dp)),
+            )
+
             Text(
                 "Project: ${state.projectName.ifBlank { projectId }}",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            AnimatedVisibility(
-                visible = state.isLoading || state.isTranscribing || state.transcript == null || state.errorMessage != null,
-            ) {
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (state.errorMessage == null) {
-                            MaterialTheme.colorScheme.secondaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.errorContainer
-                        },
-                        contentColor = if (state.errorMessage == null) {
-                            MaterialTheme.colorScheme.onSecondaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.onErrorContainer
-                        },
-                    ),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Column(
-                        modifier = Modifier.padding(14.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Text(
-                            when {
-                                state.errorMessage != null -> state.errorMessage.orEmpty()
-                                state.isTranscribing -> "Transcribing on-device: ${state.transcriptionStage ?: "starting"}"
-                                state.isLoading -> "Loading project..."
-                                else -> "Waiting for the on-device transcript."
-                            },
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                        if (state.isTranscribing) {
-                            LinearProgressIndicator(
-                                progress = { state.transcriptionProgress.coerceIn(0f, 1f) },
-                                modifier = Modifier.fillMaxWidth(),
-                            )
-                        }
-                        if (state.canRetryTranscription) {
-                            TextButton(onClick = viewModel::retryTranscription) {
-                                Text(stringResource(R.string.error_retry))
-                            }
-                        }
-                        if (state.canStartTranscription) {
-                            TextButton(onClick = viewModel::startTranscriptionManually) {
-                                Text(stringResource(R.string.editor_start_transcription))
-                            }
-                        }
-                    }
-                }
-            }
+
+            TranscriptionStatusCard(
+                state = state,
+                onRetry = viewModel::retryTranscription,
+                onStartManual = viewModel::startTranscriptionManually,
+            )
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End,
             ) {
-                TextButton(
-                    onClick = { showStyleSheet = true },
-                ) {
+                TextButton(onClick = { showStyleSheet = true }) {
                     Text("Style controls")
                 }
             }
+
             LanguageBar(
                 displayMode = state.style.displayMode,
                 detectedLanguage = state.transcript?.detectedLanguage,
@@ -230,6 +369,7 @@ fun EditorScreen(
                 onDisplayModeChange = viewModel::setDisplayMode,
                 onTargetLanguageChange = viewModel::setTargetLanguage,
             )
+
             AnimatedVisibility(visible = state.showTranslationModeHint) {
                 Card(
                     colors = CardDefaults.cardColors(
@@ -245,6 +385,7 @@ fun EditorScreen(
                     )
                 }
             }
+
             TranscriptList(
                 segments = state.transcript?.segments.orEmpty(),
                 selectedSegmentId = state.selectedSegmentId,
@@ -254,14 +395,15 @@ fun EditorScreen(
                 },
                 onEditSegmentText = viewModel::editSegmentText,
                 onNudgeSegment = viewModel::nudgeSegment,
-                modifier = Modifier.height(260.dp),
+                modifier = Modifier.weight(1f),
             )
+
             Button(
                 onClick = onExport,
                 enabled = state.transcript?.segments?.isNotEmpty() == true && !state.isTranscribing,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
+                    .height(48.dp),
                 shape = RoundedCornerShape(18.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
@@ -284,6 +426,7 @@ fun EditorScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
                     .padding(horizontal = 20.dp, vertical = 8.dp),
             ) {
                 Text(

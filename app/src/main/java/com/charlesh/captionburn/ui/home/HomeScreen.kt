@@ -121,7 +121,7 @@ fun HomeScreen(
                         contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     ),
                 ) {
-                    Icon(Icons.Rounded.Settings, contentDescription = null)
+                    Icon(Icons.Rounded.Settings, contentDescription = "Settings")
                 }
             }
 

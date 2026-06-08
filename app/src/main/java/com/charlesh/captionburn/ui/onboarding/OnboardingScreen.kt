@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -74,41 +76,49 @@ fun OnboardingScreen(
         Column(
             modifier = Modifier.fillMaxSize(),
         ) {
-            Spacer(Modifier.height(48.dp))
-            BadgeIcon()
-            Spacer(Modifier.height(32.dp))
-            Text(
-                stringResource(R.string.onboarding_title),
-                style = MaterialTheme.typography.displayMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-            Spacer(Modifier.height(12.dp))
-            Text(
-                stringResource(R.string.onboarding_body),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(Modifier.height(40.dp))
-            Text(
-                stringResource(R.string.onboarding_pick_model),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-            Spacer(Modifier.height(12.dp))
-            WhisperModelChoice.entries.forEach { choice ->
-                ModelCard(
-                    choice = choice,
-                    selected = choice == state.selectedModel,
-                    onClick = { viewModel.selectModel(choice) },
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                Spacer(Modifier.height(48.dp))
+                BadgeIcon()
+                Spacer(Modifier.height(32.dp))
+                Text(
+                    stringResource(R.string.onboarding_title),
+                    style = MaterialTheme.typography.displayMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
                 )
-                Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    stringResource(R.string.onboarding_body),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(40.dp))
+                Text(
+                    stringResource(R.string.onboarding_pick_model),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+                Spacer(Modifier.height(12.dp))
+                WhisperModelChoice.entries.forEach { choice ->
+                    ModelCard(
+                        choice = choice,
+                        selected = choice == state.selectedModel,
+                        onClick = { viewModel.selectModel(choice) },
+                    )
+                    Spacer(Modifier.height(10.dp))
+                }
+                Spacer(Modifier.height(20.dp))
+                WifiOnlyRow(
+                    checked = state.wifiOnly,
+                    onCheckedChange = { viewModel.toggleWifiOnly() },
+                )
+                Spacer(Modifier.height(24.dp))
             }
-            Spacer(Modifier.height(20.dp))
-            WifiOnlyRow(
-                checked = state.wifiOnly,
-                onCheckedChange = { viewModel.toggleWifiOnly() },
-            )
-            Spacer(Modifier.weight(1f))
+
             ContinueButton(
                 isDownloading = state.isDownloading,
                 progress = state.downloadProgress,

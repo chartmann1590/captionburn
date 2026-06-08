@@ -1,0 +1,118 @@
+[
+  {
+    "eventType": "VIEW_CLICKED",
+    "elementDescriptors": [
+      {
+        "text": "Wi-Fi only"
+      }
+    ]
+  },
+  {
+    "eventType": "VIEW_CLICKED",
+    "elementDescriptors": [
+      {
+        "text": "Tiny"
+      }
+    ]
+  },
+  {
+    "eventType": "VIEW_CLICKED",
+    "elementDescriptors": [
+      {
+        "text": "Continue"
+      }
+    ]
+  },
+  {
+    "eventType": "DELAY",
+    "delayMs": 25000
+  },
+  {
+    "eventType": "VIEW_CLICKED",
+    "elementDescriptors": [
+      {
+        "text": "Import video"
+      }
+    ]
+  },
+  {
+    "eventType": "DELAY",
+    "delayMs": 3000
+  },
+  {
+    "eventType": "VIEW_CLICKED",
+    "elementDescriptors": [
+      {
+        "resourceId": "com.google.android.providers.media.module:id/icon_thumbnail"
+      }
+    ]
+  },
+  {
+    "eventType": "VIEW_CLICKED",
+    "elementDescriptors": [
+      {
+        "resourceId": "com.android.providers.media.module:id/icon_thumbnail"
+      }
+    ]
+  },
+  {
+    "eventType": "DELAY",
+    "delayMs": 20000
+  },
+  {
+    "eventType": "VIEW_CLICKED",
+    "elementDescriptors": [
+      {
+        "text": "No translation"
+      }
+    ]
+  },
+  {
+    "eventType": "DELAY",
+    "delayMs": 2000
+  },
+  {
+    "eventType": "VIEW_CLICKED",
+    "elementDescriptors": [
+      {
+        "text": "Spanish (ES)"
+      }
+    ]
+  },
+  {
+    "eventType": "DELAY",
+    "delayMs": 2000
+  },
+  {
+    "eventType": "VIEW_CLICKED",
+    "elementDescriptors": [
+      {
+        "text": "Both"
+      }
+    ]
+  },
+  {
+    "eventType": "DELAY",
+    "delayMs": 15000
+  },
+  {
+    "eventType": "VIEW_CLICKED",
+    "elementDescriptors": [
+      {
+        "text": "Export with captions"
+      }
+    ]
+  },
+  {
+    "eventType": "DELAY",
+    "delayMs": 20000
+  },
+  {
+    "eventType": "VIEW_CLICKED",
+    "elementDescriptors": [
+      {
+        "text": "Save to device"
+      }
+    ]
+  }
+]

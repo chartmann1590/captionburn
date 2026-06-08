@@ -38,7 +38,7 @@ import com.google.android.gms.ads.nativead.NativeAdView
 
 @Composable
 fun BottomBannerAd(modifier: Modifier = Modifier) {
-    if (BuildConfig.ADMOB_BANNER_AD_UNIT_ID.isBlank()) return
+    if (isUnderTest() || BuildConfig.ADMOB_BANNER_AD_UNIT_ID.isBlank()) return
     val context = LocalContext.current
     val widthDp = LocalConfiguration.current.screenWidthDp
     val adSize = remember(widthDp) {
@@ -65,7 +65,7 @@ fun BottomBannerAd(modifier: Modifier = Modifier) {
 
 @Composable
 fun NativeAdvancedAd(modifier: Modifier = Modifier) {
-    if (BuildConfig.ADMOB_NATIVE_ADVANCED_AD_UNIT_ID.isBlank()) return
+    if (isUnderTest() || BuildConfig.ADMOB_NATIVE_ADVANCED_AD_UNIT_ID.isBlank()) return
     val context = LocalContext.current
     var nativeAd by remember { mutableStateOf<NativeAd?>(null) }
 
@@ -126,7 +126,7 @@ fun loadInterstitial(
     onLoaded: (InterstitialAd?) -> Unit,
 ) {
     val unitId = BuildConfig.ADMOB_INTERSTITIAL_AD_UNIT_ID
-    if (unitId.isBlank()) {
+    if (isUnderTest() || unitId.isBlank()) {
         onLoaded(null)
         return
     }
@@ -193,4 +193,29 @@ private fun bindNativeAd(view: NativeAdView, ad: NativeAd) {
         visibility = if (ad.callToAction.isNullOrBlank()) android.view.View.GONE else android.view.View.VISIBLE
     }
     view.setNativeAd(ad)
+}
+
+private fun isUnderTest(): Boolean {
+    return try {
+        Class.forName("androidx.test.espresso.Espresso")
+        true
+    } catch (e: Exception) {
+        try {
+            Class.forName("androidx.test.espresso.Espresso", false, Thread.currentThread().contextClassLoader)
+            true
+        } catch (e2: Exception) {
+            try {
+                val thread = Class.forName("android.app.ActivityThread")
+                    .getMethod("currentActivityThread")
+                    .invoke(null)
+                val instr = Class.forName("android.app.ActivityThread")
+                    .getMethod("getInstrumentation")
+                    .invoke(thread)
+                val name = instr?.javaClass?.name ?: ""
+                name.contains("test") || name.contains("runner") || (name.isNotEmpty() && name != "android.app.Instrumentation")
+            } catch (e3: Exception) {
+                false
+            }
+        }
+    }
 }
