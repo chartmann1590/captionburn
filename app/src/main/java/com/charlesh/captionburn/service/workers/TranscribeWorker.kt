@@ -10,7 +10,6 @@ import com.charlesh.captionburn.data.settings.SettingsRepository
 import com.charlesh.captionburn.data.transcription.TranscriptionProgress
 import com.charlesh.captionburn.data.transcription.TranscriptionService
 import com.charlesh.captionburn.domain.model.ProjectStatus
-
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first
@@ -26,6 +25,8 @@ class TranscribeWorker @AssistedInject constructor(
 ) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result {
+        updateProcessingForeground(stage = "transcribe", progress = 0.05f)
+
         val projectId = inputData.getString(PipelineWorkData.KEY_PROJECT_ID)
             ?: return Result.failure(PipelineWorkData.failure("Missing project id", retryable = false))
         val project = projects.getProject(projectId)
@@ -50,9 +51,18 @@ class TranscribeWorker @AssistedInject constructor(
             modelChoice = model,
         ).first { progress ->
             when (progress) {
-                is TranscriptionProgress.ExtractingAudio -> setProgress(PipelineWorkData.progress("extract-audio", 0.12f))
-                is TranscriptionProgress.LoadingModel -> setProgress(PipelineWorkData.progress("load-model", 0.2f))
-                is TranscriptionProgress.Transcribing -> setProgress(PipelineWorkData.progress("transcribe", 0.35f))
+                is TranscriptionProgress.ExtractingAudio -> {
+                    setProgress(PipelineWorkData.progress("extract-audio", 0.12f))
+                    updateProcessingForeground("extract-audio", 0.12f)
+                }
+                is TranscriptionProgress.LoadingModel -> {
+                    setProgress(PipelineWorkData.progress("load-model", 0.2f))
+                    updateProcessingForeground("load-model", 0.2f)
+                }
+                is TranscriptionProgress.Transcribing -> {
+                    setProgress(PipelineWorkData.progress("transcribe", 0.35f))
+                    updateProcessingForeground("transcribe", 0.35f)
+                }
                 else -> Unit
             }
             progress is TranscriptionProgress.Done || progress is TranscriptionProgress.Failed

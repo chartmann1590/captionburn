@@ -29,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -39,6 +40,9 @@ import android.content.pm.PackageManager
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.charlesh.captionburn.R
 import com.charlesh.captionburn.ui.ads.NativeAdvancedAd
+import com.charlesh.captionburn.ui.common.LowEndDeviceBanner
+import com.charlesh.captionburn.ui.common.OnDeviceBanner
+import com.charlesh.captionburn.util.DeviceCapability
 
 @Composable
 fun ExportScreen(
@@ -48,6 +52,7 @@ fun ExportScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val isLowEndDevice = remember { DeviceCapability.isLowEndDevice(context) }
     val needsNotificationPermissionRationale =
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(
@@ -91,17 +96,31 @@ fun ExportScreen(
                     )
                 }
             }
+            AnimatedVisibility(visible = state.isExporting && isLowEndDevice) {
+                LowEndDeviceBanner(modifier = Modifier.padding(top = 12.dp))
+            }
+            AnimatedVisibility(visible = state.isExporting) {
+                OnDeviceBanner(modifier = Modifier.padding(top = 12.dp))
+            }
             Spacer(Modifier.height(20.dp))
             LinearProgressIndicator(
                 progress = { state.progress.coerceIn(0f, 1f) },
                 modifier = Modifier.fillMaxWidth(),
             )
             AnimatedVisibility(visible = state.isExporting) {
-                Text(
-                    text = exportStageText(state.stage),
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(top = 12.dp),
-                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = exportStageText(state.stage),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(top = 12.dp),
+                    )
+                    Text(
+                        text = stringResource(R.string.export_background_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
+                }
             }
             AnimatedVisibility(visible = state.isExporting && state.stage == "burn-publish") {
                 Column(modifier = Modifier.fillMaxWidth()) {
@@ -133,7 +152,7 @@ fun ExportScreen(
             ) {
                 Text(stringResource(R.string.export_save))
             }
-            AnimatedVisibility(visible = state.isDone && !state.outputUri.isNullOrBlank()) {
+            AnimatedVisibility(visible = state.isDone) {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Spacer(Modifier.height(12.dp))
                     Button(

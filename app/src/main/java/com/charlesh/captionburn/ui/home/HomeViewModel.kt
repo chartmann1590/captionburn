@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.charlesh.captionburn.data.project.ProjectRepository
+import com.charlesh.captionburn.data.settings.SettingsRepository
 import com.charlesh.captionburn.di.IoDispatcher
 import com.charlesh.captionburn.domain.model.Project
 import com.charlesh.captionburn.domain.usecase.RunPipelineUseCase
@@ -23,6 +24,7 @@ import timber.log.Timber
 
 data class HomeState(
     val projects: List<Project> = emptyList(),
+    val showOnDeviceTip: Boolean = false,
 )
 
 @HiltViewModel
@@ -31,6 +33,7 @@ class HomeViewModel @Inject constructor(
     @IoDispatcher private val io: CoroutineDispatcher,
     private val projects: ProjectRepository,
     private val runPipeline: RunPipelineUseCase,
+    private val settings: SettingsRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(HomeState())
@@ -42,6 +45,15 @@ class HomeViewModel @Inject constructor(
                 _state.update { it.copy(projects = list.sortedByDescending(Project::createdAt)) }
             }
         }
+        viewModelScope.launch {
+            settings.homeTipDismissed.collect { dismissed ->
+                _state.update { it.copy(showOnDeviceTip = !dismissed) }
+            }
+        }
+    }
+
+    fun dismissOnDeviceTip() {
+        viewModelScope.launch { settings.setHomeTipDismissed() }
     }
 
     /** Called when the user picks a video from the system Photo Picker. */

@@ -25,6 +25,7 @@
 
     <!-- Editor -->
     <string name="editor_transcribing">Listening to your video&#8230;</string>
+    <string name="editor_transcribing_privacy_hint">This may take several minutes depending on your phone\'s hardware — your audio never leaves your device.</string>
     <string name="editor_languages_original">Original</string>
     <string name="editor_languages_translated">Translation</string>
     <string name="editor_languages_both">Both</string>
@@ -37,6 +38,8 @@
     <string name="editor_translation_hint_original_mode">Target language is set, but display mode is Original. Translation will not run unless you switch to Translation or Both.</string>
 
     <!-- Export -->
+    <string name="export_on_device_privacy">Everything runs entirely on your phone — no audio or video is ever sent to the cloud. Your content stays completely private. Processing time depends on your device\'s hardware, so it may take several minutes. Other apps offload this to powerful servers; we keep it on your device instead. Worth the wait!</string>
+    <string name="export_background_hint">You can leave this screen — processing continues in the background.</string>
     <string name="export_progress">Burning captions&#8230;</string>
     <string name="export_done_title">Captions ready</string>
     <string name="export_stage_processing">Processing video&#8230;</string>
@@ -52,7 +55,21 @@
     <!-- Notifications -->
     <string name="notif_channel_processing">Caption processing</string>
     <string name="notif_processing_title">CaptionBurn is working</string>
+    <string name="notif_processing_body">On-device processing — time varies by device speed</string>
     <string name="notif_processing_cancel">Cancel</string>
+
+    <!-- On-device banner (shown across Onboarding, Home, Editor, Export) -->
+    <string name="on_device_banner_title">Runs entirely on your phone</string>
+    <string name="on_device_banner_body">Transcription, translation, and caption burn-in all happen on-device — nothing is ever uploaded. On older or slower phones this can take several minutes. You can leave the app; it keeps working in the background and a notification shows progress.</string>
+    <string name="on_device_banner_short">Everything runs on-device. It may be slow on older phones, and keeps working in the background.</string>
+    <string name="on_device_banner_dismiss">Dismiss</string>
+
+    <!-- Low-end device warning (shown only on genuinely weak hardware) -->
+    <string name="low_end_title">This phone may be slow</string>
+    <string name="low_end_body">Your device is on the lower-powered side for on-device AI. Captioning runs on its processor — there\'s no dedicated graphics acceleration here — so transcription and burn-in may take a while. The Tiny speech model is the fastest choice.</string>
+
+    <!-- Transcription background hint -->
+    <string name="editor_transcribing_background_hint">You can leave this screen — transcription continues in the background.</string>
 
     <!-- Errors -->
     <string name="error_generic">Something went wrong</string>

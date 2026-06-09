@@ -31,6 +31,8 @@ class TranslateWorker @AssistedInject constructor(
             ?.ifBlank { null }
 
     override suspend fun doWork(): Result {
+        updateProcessingForeground(stage = "download-translation-model", progress = 0.45f)
+
         val projectId = inputData.getString(PipelineWorkData.KEY_PROJECT_ID)
             ?: return Result.failure(PipelineWorkData.failure("Missing project id", retryable = false))
         val project = projects.getProject(projectId)
@@ -62,11 +64,14 @@ class TranslateWorker @AssistedInject constructor(
                         delay(2_500)
                         p = (p + 0.008f).coerceAtMost(0.50f)
                         setProgressAsync(PipelineWorkData.progress("download-translation-model", p))
+                        updateProcessingForegroundAsync("download-translation-model", p)
                     }
                 },
                 onProgress = { progress: TranslateProgress ->
                     val normalized = if (progress.total == 0) 1f else progress.completed.toFloat() / progress.total.toFloat()
-                    setProgressAsync(PipelineWorkData.progress("translate", 0.50f + (normalized * 0.15f)))
+                    val overall = 0.50f + (normalized * 0.15f)
+                    setProgressAsync(PipelineWorkData.progress("translate", overall))
+                    updateProcessingForegroundAsync("translate", overall)
                 },
             )
             projects.updateProject(projectId) {

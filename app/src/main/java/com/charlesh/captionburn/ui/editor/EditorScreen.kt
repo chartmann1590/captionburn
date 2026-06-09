@@ -54,6 +54,9 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import com.charlesh.captionburn.R
 import com.charlesh.captionburn.domain.model.Segment
+import com.charlesh.captionburn.ui.common.LowEndDeviceBanner
+import com.charlesh.captionburn.ui.common.OnDeviceBanner
+import com.charlesh.captionburn.util.DeviceCapability
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -138,6 +141,16 @@ private fun TranscriptionStatusCard(
                         progress = { state.transcriptionProgress.coerceIn(0f, 1f) },
                         modifier = Modifier.fillMaxWidth(),
                     )
+                    Text(
+                        text = stringResource(R.string.editor_transcribing_privacy_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
+                    )
+                    Text(
+                        text = stringResource(R.string.editor_transcribing_background_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
+                    )
                 }
                 if (state.canRetryTranscription) {
                     TextButton(onClick = onRetry) {
@@ -166,6 +179,8 @@ fun EditorScreen(
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val isLowEndDevice = remember { DeviceCapability.isLowEndDevice(context) }
+    val hasSegments = state.transcript?.segments?.isNotEmpty() == true
 
     LaunchedEffect(projectId) { viewModel.bindProject(projectId) }
     val player = remember(sourceUri, context) {
@@ -244,6 +259,13 @@ fun EditorScreen(
                     TextButton(onClick = { showStyleSheet = true }) {
                         Text("Style controls")
                     }
+                }
+
+                if (isLowEndDevice) {
+                    LowEndDeviceBanner()
+                }
+                if (!hasSegments && !state.isTranscribing) {
+                    OnDeviceBanner(compact = true)
                 }
 
                 TranscriptionStatusCard(
@@ -336,7 +358,9 @@ fun EditorScreen(
                 state = state,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1.1f)
+                    // Until a transcript exists the editing controls below are hidden,
+                    // so the preview fills the freed space instead of being squeezed.
+                    .weight(if (hasSegments) 1.1f else 1f)
                     .clip(RoundedCornerShape(20.dp)),
             )
 
@@ -346,57 +370,70 @@ fun EditorScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
+            if (isLowEndDevice) {
+                LowEndDeviceBanner()
+            }
+            // Pre-transcription notice only; during transcription the status card already
+            // covers on-device + background, and during editing the space goes to captions.
+            if (!hasSegments && !state.isTranscribing) {
+                OnDeviceBanner(compact = true)
+            }
+
             TranscriptionStatusCard(
                 state = state,
                 onRetry = viewModel::retryTranscription,
                 onStartManual = viewModel::startTranscriptionManually,
             )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-            ) {
-                TextButton(onClick = { showStyleSheet = true }) {
-                    Text("Style controls")
-                }
-            }
-
-            LanguageBar(
-                displayMode = state.style.displayMode,
-                detectedLanguage = state.transcript?.detectedLanguage,
-                targetLanguage = state.style.targetLanguage,
-                supportedLanguages = state.supportedTargetLanguages,
-                onDisplayModeChange = viewModel::setDisplayMode,
-                onTargetLanguageChange = viewModel::setTargetLanguage,
-            )
-
-            AnimatedVisibility(visible = state.showTranslationModeHint) {
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                    ),
+            // Editing controls only matter once captions exist — collapse them while
+            // transcribing so the preview stays large.
+            if (hasSegments) {
+                Row(
                     modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
                 ) {
-                    Text(
-                        text = stringResource(R.string.editor_translation_hint_original_mode),
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(12.dp),
-                    )
+                    TextButton(onClick = { showStyleSheet = true }) {
+                        Text("Style controls")
+                    }
                 }
-            }
 
-            TranscriptList(
-                segments = state.transcript?.segments.orEmpty(),
-                selectedSegmentId = state.selectedSegmentId,
-                onSelectSegment = { segment: Segment ->
-                    viewModel.selectSegment(segment.id)
-                    player?.seekTo(segment.startMs)
-                },
-                onEditSegmentText = viewModel::editSegmentText,
-                onNudgeSegment = viewModel::nudgeSegment,
-                modifier = Modifier.weight(1f),
-            )
+                LanguageBar(
+                    displayMode = state.style.displayMode,
+                    detectedLanguage = state.transcript?.detectedLanguage,
+                    targetLanguage = state.style.targetLanguage,
+                    supportedLanguages = state.supportedTargetLanguages,
+                    onDisplayModeChange = viewModel::setDisplayMode,
+                    onTargetLanguageChange = viewModel::setTargetLanguage,
+                )
+
+                AnimatedVisibility(visible = state.showTranslationModeHint) {
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.editor_translation_hint_original_mode),
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(12.dp),
+                        )
+                    }
+                }
+
+                TranscriptList(
+                    segments = state.transcript?.segments.orEmpty(),
+                    selectedSegmentId = state.selectedSegmentId,
+                    onSelectSegment = { segment: Segment ->
+                        viewModel.selectSegment(segment.id)
+                        player?.seekTo(segment.startMs)
+                    },
+                    onEditSegmentText = viewModel::editSegmentText,
+                    onNudgeSegment = viewModel::nudgeSegment,
+                    modifier = Modifier.weight(1f),
+                )
+            }
 
             Button(
                 onClick = onExport,

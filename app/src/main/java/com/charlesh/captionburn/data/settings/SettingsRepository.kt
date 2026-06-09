@@ -31,6 +31,9 @@ class SettingsRepository @Inject constructor(
 
     val telemetryEnabled: Flow<Boolean> = ds.data.map { it[KEY_TELEMETRY] ?: true }
 
+    /** Whether the user has dismissed the one-time on-device explainer on Home. */
+    val homeTipDismissed: Flow<Boolean> = ds.data.map { it[KEY_HOME_TIP_DISMISSED] ?: false }
+
     val anonymousId: Flow<String> = ds.data.map { it[KEY_ANONYMOUS_ID] ?: "" }
 
     suspend fun getOrCreateAnonymousId(): String {
@@ -64,11 +67,16 @@ class SettingsRepository @Inject constructor(
         ds.edit { it[KEY_ONBOARDED] = true }
     }
 
+    suspend fun setHomeTipDismissed() {
+        ds.edit { it[KEY_HOME_TIP_DISMISSED] = true }
+    }
+
     private companion object {
         val KEY_INSTALLED_MODEL = stringPreferencesKey("installed_model")
         val KEY_WIFI_ONLY = booleanPreferencesKey("wifi_only_downloads")
         val KEY_ONBOARDED = booleanPreferencesKey("onboarding_complete")
         val KEY_TELEMETRY = booleanPreferencesKey("telemetry_enabled")
+        val KEY_HOME_TIP_DISMISSED = booleanPreferencesKey("home_tip_dismissed")
         val KEY_ANONYMOUS_ID = stringPreferencesKey("anonymous_user_id")
     }
 }

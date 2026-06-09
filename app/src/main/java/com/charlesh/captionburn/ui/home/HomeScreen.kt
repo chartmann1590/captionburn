@@ -60,6 +60,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.charlesh.captionburn.R
 import com.charlesh.captionburn.domain.model.Project
 import com.charlesh.captionburn.domain.model.ProjectStatus
+import com.charlesh.captionburn.ui.common.OnDeviceBanner
 
 @Composable
 fun HomeScreen(
@@ -123,6 +124,13 @@ fun HomeScreen(
                 ) {
                     Icon(Icons.Rounded.Settings, contentDescription = "Settings")
                 }
+            }
+
+            if (state.showOnDeviceTip) {
+                OnDeviceBanner(
+                    modifier = Modifier.padding(bottom = 12.dp),
+                    onDismiss = viewModel::dismissOnDeviceTip,
+                )
             }
 
             AnimatedContent(
