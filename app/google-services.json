@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "539113062214",
-    "project_id": "captionburn-charlesh-app",
-    "storage_bucket": "captionburn-charlesh-app.firebasestorage.app"
+    "project_number": "123456789012",
+    "project_id": "dummy-project-id",
+    "storage_bucket": "dummy-project-id.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:539113062214:android:bf726ecddac933b4ab6f47",
+        "mobilesdk_app_id": "1:123456789012:android:0123456789abcdef012345",
         "android_client_info": {
-          "package_name": "com.charlesh.captionburn"
+          "package_name": "com.charlesh.captionburn.debug"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "GOOGLE_SERVICES_API_KEY_PLACEHOLDER"
+          "current_key": "AIzaSyDummyApiKeyHere1234567890abcdef"
         }
       ],
       "services": {
@@ -26,15 +26,15 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:539113062214:android:566f2490c159162fab6f47",
+        "mobilesdk_app_id": "1:123456789012:android:0123456789abcdef012346",
         "android_client_info": {
-          "package_name": "com.charlesh.captionburn.debug"
+          "package_name": "com.charlesh.captionburn"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "GOOGLE_SERVICES_API_KEY_PLACEHOLDER"
+          "current_key": "AIzaSyDummyApiKeyHere1234567890abcdef"
         }
       ],
       "services": {

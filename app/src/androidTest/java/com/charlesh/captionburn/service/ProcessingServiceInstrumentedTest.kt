@@ -1,6 +1,5 @@
 package com.charlesh.captionburn.service
 
-import android.content.Intent
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.work.ExistingWorkPolicy
@@ -18,11 +17,17 @@ import kotlinx.coroutines.withTimeout
 import org.junit.Test
 import org.junit.runner.RunWith
 
+/**
+ * The pipeline foreground lifecycle is owned by WorkManager (no standalone Service).
+ * Cancellation is driven through WorkManager — the notification's Cancel action uses
+ * [WorkManager.createCancelPendingIntent]. This verifies that cancelling the unique
+ * pipeline work transitions it to CANCELLED.
+ */
 @RunWith(AndroidJUnit4::class)
 class ProcessingServiceInstrumentedTest {
 
     @Test
-    fun cancelIntent_cancelsUniquePipelineWork() {
+    fun cancelUniqueWork_cancelsPipeline() {
         runBlocking {
             val context = InstrumentationRegistry.getInstrumentation().targetContext
             val workManager = WorkManager.getInstance(context)
@@ -39,11 +44,7 @@ class ProcessingServiceInstrumentedTest {
                     .build(),
             ).enqueue()
 
-            context.startService(
-                Intent(context, ProcessingService::class.java)
-                    .setAction(ProcessingService.ACTION_CANCEL)
-                    .putExtra(ProcessingService.EXTRA_PROJECT_ID, projectId),
-            )
+            workManager.cancelUniqueWork(uniqueName)
 
             withTimeout(10_000) {
                 while (true) {

@@ -47,10 +47,15 @@
             </intent-filter>
         </activity>
 
+        <!-- The pipeline runs inside WorkManager workers that promote themselves to a
+             foreground service. WorkManager's SystemForegroundService does not declare a
+             foregroundServiceType itself, so we merge the types our workers use (network
+             model downloads = dataSync, on-device transcode/burn = mediaProcessing). -->
         <service
-            android:name=".service.ProcessingService"
-            android:exported="false"
-            android:foregroundServiceType="dataSync|mediaProcessing" />
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="dataSync|mediaProcessing"
+            tools:node="merge"
+            tools:targetApi="34" />
 
         <!-- ML Kit translate model auto-download metadata -->
         <meta-data
@@ -59,6 +64,20 @@
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="${ADMOB_APP_ID}" />
+
+        <!-- Disable Firebase Auto-Collection to prevent crashes without credentials -->
+        <meta-data
+            android:name="firebase_performance_collection_enabled"
+            android:value="false" />
+        <meta-data
+            android:name="firebase_performance_collection_deactivated"
+            android:value="true" />
+        <meta-data
+            android:name="firebase_analytics_collection_enabled"
+            android:value="false" />
+        <meta-data
+            android:name="firebase_crashlytics_collection_enabled"
+            android:value="false" />
 
         <property
             android:name="android.adservices.AD_SERVICES_CONFIG"

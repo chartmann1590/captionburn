@@ -38,15 +38,20 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.charlesh.captionburn.R
+import com.charlesh.captionburn.ui.common.LowEndDeviceBanner
+import com.charlesh.captionburn.ui.common.OnDeviceBanner
+import com.charlesh.captionburn.util.DeviceCapability
 
 @Composable
 fun OnboardingScreen(
@@ -54,6 +59,8 @@ fun OnboardingScreen(
     onContinue: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val isLowEndDevice = remember { DeviceCapability.isLowEndDevice(context) }
 
     LaunchedEffect(state.isComplete) {
         if (state.isComplete) onContinue()
@@ -111,11 +118,17 @@ fun OnboardingScreen(
                     )
                     Spacer(Modifier.height(10.dp))
                 }
+                if (isLowEndDevice) {
+                    Spacer(Modifier.height(16.dp))
+                    LowEndDeviceBanner()
+                }
                 Spacer(Modifier.height(20.dp))
                 WifiOnlyRow(
                     checked = state.wifiOnly,
                     onCheckedChange = { viewModel.toggleWifiOnly() },
                 )
+                Spacer(Modifier.height(20.dp))
+                OnDeviceBanner()
                 Spacer(Modifier.height(24.dp))
             }
 

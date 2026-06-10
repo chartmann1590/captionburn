@@ -23,6 +23,8 @@ class BurnPublishWorker @AssistedInject constructor(
 ) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result {
+        updateProcessingForeground(stage = "burn-publish", progress = 0.8f)
+
         val projectId = inputData.getString(PipelineWorkData.KEY_PROJECT_ID)
             ?: return Result.failure(PipelineWorkData.failure("Missing project id", retryable = false))
         val assPath = inputData.getString(PipelineWorkData.KEY_ASS_PATH)
@@ -47,7 +49,9 @@ class BurnPublishWorker @AssistedInject constructor(
             outputDisplayName = "${project.displayName}-captioned.mp4",
             durationMs = project.durationMs,
         ) { stageProgress ->
-            setProgressAsync(PipelineWorkData.progress("burn-publish", 0.8f + (stageProgress * 0.2f)))
+            val overall = 0.8f + (stageProgress * 0.2f)
+            setProgressAsync(PipelineWorkData.progress("burn-publish", overall))
+            updateProcessingForegroundAsync("burn-publish", overall)
         }.fold(
             onSuccess = { burnResult ->
                 telemetry.logEvent("ffmpeg_burn_success", mapOf(

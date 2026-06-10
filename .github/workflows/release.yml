@@ -102,11 +102,21 @@ jobs:
           github.repo.name=${GITHUB_REPO_NAME:-captionburn}
           EOF
 
-      - name: Inject Google Services API Key
+      - name: Write real google-services.json from secret
         env:
-          GOOGLE_SERVICES_API_KEY: ${{ secrets.GOOGLE_SERVICES_API_KEY }}
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
-          sed -i "s/GOOGLE_SERVICES_API_KEY_PLACEHOLDER/$GOOGLE_SERVICES_API_KEY/g" app/google-services.json
+          if [ -z "$GOOGLE_SERVICES_JSON" ]; then
+            echo "::error::GOOGLE_SERVICES_JSON secret is empty. Set it to the base64 of the real app/google-services.json."
+            exit 1
+          fi
+          echo "$GOOGLE_SERVICES_JSON" | base64 -d > app/google-services.json
+          # Sanity-check it is the real config, not the committed dummy placeholder.
+          if grep -q "dummy-project-id" app/google-services.json; then
+            echo "::error::Decoded google-services.json still contains placeholder values."
+            exit 1
+          fi
+          echo "google-services.json written ($(wc -c < app/google-services.json) bytes)."
 
       - name: Make gradlew executable
         run: chmod +x gradlew

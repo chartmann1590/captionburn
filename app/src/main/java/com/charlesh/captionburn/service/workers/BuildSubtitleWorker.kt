@@ -32,6 +32,8 @@ class BuildSubtitleWorker @AssistedInject constructor(
 ) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result {
+        updateProcessingForeground(stage = "build-subtitles", progress = 0.7f)
+
         val projectId = inputData.getString(PipelineWorkData.KEY_PROJECT_ID)
             ?: return Result.failure(PipelineWorkData.failure("Missing project id", retryable = false))
         val project = projects.getProject(projectId)

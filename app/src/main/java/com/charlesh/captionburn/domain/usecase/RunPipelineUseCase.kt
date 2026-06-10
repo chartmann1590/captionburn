@@ -1,13 +1,10 @@
 package com.charlesh.captionburn.domain.usecase
 
 import android.content.Context
-import android.content.Intent
-import androidx.core.content.ContextCompat
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
-import com.charlesh.captionburn.service.ProcessingService
 import com.charlesh.captionburn.service.workers.BurnPublishWorker
 import com.charlesh.captionburn.service.workers.BuildSubtitleWorker
 import com.charlesh.captionburn.service.workers.PipelineWorkData
@@ -44,7 +41,6 @@ class RunPipelineUseCase @Inject constructor(
                 .build()
         ).enqueue()
 
-        startForegroundHost(projectId, workName)
         return observeWork(projectId, workName)
     }
 
@@ -59,7 +55,6 @@ class RunPipelineUseCase @Inject constructor(
                 .build(),
         ).enqueue()
 
-        startForegroundHost(projectId, workName)
         return observeWork(projectId, workName)
     }
 
@@ -79,14 +74,6 @@ class RunPipelineUseCase @Inject constructor(
 
     fun cancelTranscription(projectId: String) {
         workManager.cancelUniqueWork(uniqueTranscriptionWorkName(projectId))
-    }
-
-    private fun startForegroundHost(projectId: String, workName: String) {
-        val serviceIntent = Intent(context, ProcessingService::class.java)
-            .setAction(ProcessingService.ACTION_START)
-            .putExtra(ProcessingService.EXTRA_PROJECT_ID, projectId)
-            .putExtra(ProcessingService.EXTRA_WORK_NAME, workName)
-        ContextCompat.startForegroundService(context, serviceIntent)
     }
 
     companion object {
@@ -150,7 +137,7 @@ internal fun List<WorkInfo>.toPipelineState(projectId: String): PipelineState {
     if (all { it.state == WorkInfo.State.SUCCEEDED }) {
         return PipelineState.Succeeded(
             projectId = projectId,
-            outputUri = lastOrNull()?.outputData?.getString(PipelineWorkData.KEY_OUTPUT_URI),
+            outputUri = firstNotNullOfOrNull { it.outputData.getString(PipelineWorkData.KEY_OUTPUT_URI) },
         )
     }
 
