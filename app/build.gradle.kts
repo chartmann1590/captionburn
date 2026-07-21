@@ -23,14 +23,14 @@ fun localProperty(name: String): String = localProperties.getProperty(name, "")
 
 android {
     namespace = "com.charlesh.captionburn"
-    compileSdk = 35
+    compileSdk = 36
     // NDK r28+ produces 16 KB–aligned native libs by default (16 KB page size support).
     ndkVersion = "28.2.13676358"
 
     defaultConfig {
         applicationId = "com.charlesh.captionburn"
         minSdk = 33
-        targetSdk = 35
+        targetSdk = 36
         versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
         versionName = System.getenv("VERSION_NAME") ?: "0.1.0"
 
