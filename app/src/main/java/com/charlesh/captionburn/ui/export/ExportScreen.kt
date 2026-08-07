@@ -1,6 +1,7 @@
 package com.charlesh.captionburn.ui.export
 
 import android.Manifest
+import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
@@ -61,6 +62,13 @@ fun ExportScreen(
             ) != PackageManager.PERMISSION_GRANTED
 
     LaunchedEffect(projectId) { viewModel.bindProject(projectId) }
+
+    // A caption burn just finished — real proof the on-device pipeline worked end to end.
+    LaunchedEffect(state.isDone) {
+        if (state.isDone) {
+            (context as? Activity)?.let { ReviewPrompter.maybeRequestReview(it) }
+        }
+    }
 
     Box(
         modifier = Modifier
