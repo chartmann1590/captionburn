@@ -38,8 +38,11 @@ jobs:
       - name: Compute version
         id: version
         run: |
-          CODE=$((${{ github.run_number }} + 100))
-          NAME="0.1.${{ github.run_number }}"
+          # Timestamp-based, not github.run_number: this workflow's own run counter starts
+          # at 1 and would undercut the versionCode already live on Play (116, published
+          # manually) — Play rejects any versionCode <= the live one.
+          CODE=$(date -u +'%y%j%H%M')
+          NAME="0.1.$(date -u +'%Y%m%d.%H%M')"
           echo "code=$CODE" >> "$GITHUB_OUTPUT"
           echo "name=$NAME" >> "$GITHUB_OUTPUT"
           echo "VERSION_CODE=$CODE" >> "$GITHUB_ENV"
