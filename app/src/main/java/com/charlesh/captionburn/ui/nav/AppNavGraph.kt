@@ -128,7 +128,11 @@ fun AppNavGraph(startDestination: Route = Route.Onboarding) {
                 SettingsScreen(
                     viewModel = hiltViewModel(),
                     onBack = { nav.popBackStack() },
+                    onOpenMoreApps = { nav.navigate(Route.MoreApps) },
                 )
+            }
+            composable<Route.MoreApps> {
+                com.charlesh.captionburn.ui.moreapps.MoreAppsScreen(onBack = { nav.popBackStack() })
             }
         }
     }

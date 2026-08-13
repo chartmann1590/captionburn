@@ -8,4 +8,5 @@ sealed interface Route {
     @Serializable data class Editor(val projectId: String) : Route
     @Serializable data class Export(val projectId: String) : Route
     @Serializable data object Settings : Route
+    @Serializable data object MoreApps : Route
 }
