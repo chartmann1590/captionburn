@@ -55,9 +55,6 @@ jobs:
           admob.banner.id=${{ secrets.ADMOB_BANNER_AD_UNIT_ID }}
           admob.interstitial.id=${{ secrets.ADMOB_INTERSTITIAL_AD_UNIT_ID }}
           admob.native.advanced.id=${{ secrets.ADMOB_NATIVE_ADVANCED_AD_UNIT_ID }}
-          github.api.token=${{ secrets.GH_API_TOKEN }}
-          github.repo.owner=${{ secrets.GH_REPO_OWNER }}
-          github.repo.name=${{ secrets.GH_REPO_NAME }}
           EOF
 
       - name: Decode keystore

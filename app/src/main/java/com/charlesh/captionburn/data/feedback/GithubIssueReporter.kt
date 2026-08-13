@@ -1,6 +1,5 @@
 package com.charlesh.captionburn.data.feedback
 
-import com.charlesh.captionburn.BuildConfig
 import com.charlesh.captionburn.di.IoDispatcher
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
@@ -39,7 +38,13 @@ data class GithubUser(
 )
 
 @Serializable
-data class GithubContentResponse(
+private data class UploadImageRequest(
+    val filename: String,
+    val contentBase64: String
+)
+
+@Serializable
+private data class UploadImageResponse(
     val content: GithubContentInfo
 )
 
@@ -48,29 +53,22 @@ data class GithubContentInfo(
     val download_url: String
 )
 
-@Serializable
-private data class UploadContentRequest(
-    val message: String,
-    val content: String
-)
-
+/**
+ * Talks to the cloudflare-worker/ feedback relay, not api.github.com directly. See
+ * cloudflare-worker/src/index.ts, which holds the GitHub token server-side as a Worker
+ * secret. Previously this embedded BuildConfig.GITHUB_API_TOKEN client-side as a Bearer
+ * header, which shipped a real repo-write PAT in every release build (extractable from
+ * the APK).
+ */
 @Singleton
 class GithubIssueReporter @Inject constructor(
     private val okHttpClient: OkHttpClient,
     private val json: Json,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) {
+    private val baseUrl = "https://captionburn-github-feedback.charles-h-hartmann1.workers.dev"
+
     suspend fun createIssue(title: String, body: String): Result<GithubIssueResponse> = withContext(ioDispatcher) {
-        val token = BuildConfig.GITHUB_API_TOKEN
-        val owner = BuildConfig.GITHUB_REPO_OWNER
-        val repo = BuildConfig.GITHUB_REPO_NAME
-
-        if (token.isBlank()) {
-            return@withContext Result.failure(IllegalStateException("GitHub API token is not configured."))
-        }
-
-        val url = "https://api.github.com/repos/$owner/$repo/issues"
-
         val requestBodyJson = json.encodeToString(
             CreateIssueRequest(
                 title = title,
@@ -79,12 +77,8 @@ class GithubIssueReporter @Inject constructor(
         )
 
         val request = Request.Builder()
-            .url(url)
+            .url("$baseUrl/issue")
             .post(requestBodyJson.toRequestBody("application/json; charset=utf-8".toMediaType()))
-            .header("Authorization", "Bearer $token")
-            .header("Accept", "application/vnd.github+json")
-            .header("X-GitHub-Api-Version", "2022-11-28")
-            .header("User-Agent", "CaptionBurn-Android")
             .build()
 
         try {
@@ -105,23 +99,9 @@ class GithubIssueReporter @Inject constructor(
     }
 
     suspend fun fetchIssue(number: Int): Result<GithubIssueResponse> = withContext(ioDispatcher) {
-        val token = BuildConfig.GITHUB_API_TOKEN
-        val owner = BuildConfig.GITHUB_REPO_OWNER
-        val repo = BuildConfig.GITHUB_REPO_NAME
-
-        if (token.isBlank()) {
-            return@withContext Result.failure(IllegalStateException("GitHub API token is not configured."))
-        }
-
-        val url = "https://api.github.com/repos/$owner/$repo/issues/$number"
-
         val request = Request.Builder()
-            .url(url)
+            .url("$baseUrl/issue/$number")
             .get()
-            .header("Authorization", "Bearer $token")
-            .header("Accept", "application/vnd.github+json")
-            .header("X-GitHub-Api-Version", "2022-11-28")
-            .header("User-Agent", "CaptionBurn-Android")
             .build()
 
         try {
@@ -142,23 +122,9 @@ class GithubIssueReporter @Inject constructor(
     }
 
     suspend fun fetchComments(number: Int): Result<List<GithubCommentResponse>> = withContext(ioDispatcher) {
-        val token = BuildConfig.GITHUB_API_TOKEN
-        val owner = BuildConfig.GITHUB_REPO_OWNER
-        val repo = BuildConfig.GITHUB_REPO_NAME
-
-        if (token.isBlank()) {
-            return@withContext Result.failure(IllegalStateException("GitHub API token is not configured."))
-        }
-
-        val url = "https://api.github.com/repos/$owner/$repo/issues/$number/comments"
-
         val request = Request.Builder()
-            .url(url)
+            .url("$baseUrl/issue/$number/comments")
             .get()
-            .header("Authorization", "Bearer $token")
-            .header("Accept", "application/vnd.github+json")
-            .header("X-GitHub-Api-Version", "2022-11-28")
-            .header("User-Agent", "CaptionBurn-Android")
             .build()
 
         try {
@@ -179,27 +145,13 @@ class GithubIssueReporter @Inject constructor(
     }
 
     suspend fun addComment(number: Int, body: String): Result<GithubCommentResponse> = withContext(ioDispatcher) {
-        val token = BuildConfig.GITHUB_API_TOKEN
-        val owner = BuildConfig.GITHUB_REPO_OWNER
-        val repo = BuildConfig.GITHUB_REPO_NAME
-
-        if (token.isBlank()) {
-            return@withContext Result.failure(IllegalStateException("GitHub API token is not configured."))
-        }
-
-        val url = "https://api.github.com/repos/$owner/$repo/issues/$number/comments"
-
         val requestBodyJson = json.encodeToString(
             AddCommentRequest(body = body)
         )
 
         val request = Request.Builder()
-            .url(url)
+            .url("$baseUrl/issue/$number/comments")
             .post(requestBodyJson.toRequestBody("application/json; charset=utf-8".toMediaType()))
-            .header("Authorization", "Bearer $token")
-            .header("Accept", "application/vnd.github+json")
-            .header("X-GitHub-Api-Version", "2022-11-28")
-            .header("User-Agent", "CaptionBurn-Android")
             .build()
 
         try {
@@ -220,37 +172,23 @@ class GithubIssueReporter @Inject constructor(
     }
 
     suspend fun uploadImage(filename: String, base64Content: String): Result<String> = withContext(ioDispatcher) {
-        val token = BuildConfig.GITHUB_API_TOKEN
-        val owner = BuildConfig.GITHUB_REPO_OWNER
-        val repo = BuildConfig.GITHUB_REPO_NAME
-
-        if (token.isBlank()) {
-            return@withContext Result.failure(IllegalStateException("GitHub API token is not configured."))
-        }
-
-        val url = "https://api.github.com/repos/$owner/$repo/contents/feedback-assets/$filename"
-
         val requestBodyJson = json.encodeToString(
-            UploadContentRequest(
-                message = "Upload screenshot $filename",
-                content = base64Content
+            UploadImageRequest(
+                filename = filename,
+                contentBase64 = base64Content
             )
         )
 
         val request = Request.Builder()
-            .url(url)
-            .put(requestBodyJson.toRequestBody("application/json; charset=utf-8".toMediaType()))
-            .header("Authorization", "Bearer $token")
-            .header("Accept", "application/vnd.github+json")
-            .header("X-GitHub-Api-Version", "2022-11-28")
-            .header("User-Agent", "CaptionBurn-Android")
+            .url("$baseUrl/upload-image")
+            .post(requestBodyJson.toRequestBody("application/json; charset=utf-8".toMediaType()))
             .build()
 
         try {
             okHttpClient.newCall(request).execute().use { response ->
                 val responseBody = response.body?.string() ?: ""
                 if (response.isSuccessful) {
-                    val parsed = json.decodeFromString<GithubContentResponse>(responseBody)
+                    val parsed = json.decodeFromString<UploadImageResponse>(responseBody)
                     Result.success(parsed.content.download_url)
                 } else {
                     Timber.e("GitHub Content API error: code=%d body=%s", response.code, responseBody)

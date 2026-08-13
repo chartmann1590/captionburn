@@ -41,10 +41,6 @@ android {
         buildConfigField("String", "ADMOB_BANNER_AD_UNIT_ID", "\"${localProperty("admob.banner.id")}\"")
         buildConfigField("String", "ADMOB_INTERSTITIAL_AD_UNIT_ID", "\"${localProperty("admob.interstitial.id")}\"")
         buildConfigField("String", "ADMOB_NATIVE_ADVANCED_AD_UNIT_ID", "\"${localProperty("admob.native.advanced.id")}\"")
-        buildConfigField("String", "GITHUB_API_TOKEN", "\"${localProperty("github.api.token")}\"")
-        buildConfigField("String", "GITHUB_REPO_OWNER", "\"${localProperty("github.repo.owner").ifEmpty { "chartmann1590" }}\"")
-        buildConfigField("String", "GITHUB_REPO_NAME", "\"${localProperty("github.repo.name").ifEmpty { "captionburn" }}\"")
-
         externalNativeBuild {
             cmake {
                 cppFlags += "-std=c++17 -O3 -ffast-math"
