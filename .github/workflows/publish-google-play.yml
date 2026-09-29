@@ -96,7 +96,10 @@ jobs:
           NOTES_FILE="distribution/whatsnew/whatsnew-en-US"
           if [ -n "${{ github.event.inputs.release_notes }}" ]; then
             printf '%s' "${{ github.event.inputs.release_notes }}" > "$NOTES_FILE"
-          else
+          elif [ ! -s "$NOTES_FILE" ]; then
+            # No manual override and no curated notes committed: fall back to
+            # commit subjects since the previous tag. Curated per-locale notes
+            # (whatsnew-<locale>) are committed in this directory and left as-is.
             PREV_TAG=$(git tag --list 'v*' --sort=-version:refname | head -n 1)
             if [ -n "$PREV_TAG" ]; then
               git log "${PREV_TAG}..HEAD" --pretty=format:'- %s' > "$NOTES_FILE"

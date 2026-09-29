@@ -1,0 +1,26 @@
+O CaptionBurn transforma vídeos falados em clipes legendados prontos para compartilhar, direto no seu aparelho Android.
+
+Importe um vídeo, gere legendas precisas com reconhecimento de voz no próprio aparelho, ajuste o estilo e exporte um vídeo finalizado com legendas incorporadas, pronto para publicar em qualquer lugar.
+
+Feito para criadores que precisam de resultados rápidos, sem depender de nuvem.
+
+Recursos:
+- Transcrição no aparelho com Whisper (sem transcrição na nuvem)
+- Escolha o idioma falado ou deixe na detecção automática
+- Tradução integrada para legendas em vários idiomas
+- Legendas incorporadas, visíveis em qualquer plataforma
+- Controles de estilo: tamanho, contorno, posição e efeitos de destaque
+- Edição de cada segmento antes de exportar
+- Exporte, reproduza e compartilhe direto do celular
+- Gerenciamento de modelos nas configurações (troque e baixe novamente os modelos de voz)
+
+Por que o CaptionBurn:
+- Privacidade em primeiro lugar: seu vídeo original fica no seu aparelho
+- Edição para criadores: ajuste as legendas antes da renderização final
+- Fluxo mobile: escolha o vídeo, legende, estilize e exporte em um único app
+
+Perfeito para:
+- Criadores de conteúdo para redes sociais
+- Professores e instrutores
+- Publicação de conteúdo multilíngue
+- Qualquer pessoa que queira vídeos legíveis e acessíveis com o mínimo de esforço

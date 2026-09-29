@@ -1,0 +1,26 @@
+CaptionBurn verwandelt gesprochene Videos direkt auf deinem Android-Gerät in teilbare, Untertitel-Clips.
+
+Video importieren, mit On-Device-Spracherkennung präzise Untertitel erzeugen, den Stil feinjustieren und ein fertiges Video mit eingebrannten Untertiteln exportieren – bereit zum Posten.
+
+Alles für Creator, die schnelle Ergebnisse ohne Cloud-Uploads brauchen.
+
+Funktionen:
+- On-Device-Transkription mit Whisper (keine Cloud-Transkription nötig)
+- Transkriptionssprache frei wählen oder automatische Erkennung nutzen
+- Integrierte Übersetzung für mehrsprachige Untertitel
+- Eingebrannte Untertitel, die auf jeder Plattform sichtbar bleiben
+- Stiloptionen für Größe, Kontur, Position und Highlight-Effekte
+- Segmente vor dem Export bearbeiten
+- Exportieren, wiedergeben und direkt vom Telefon teilen
+- Modellverwaltung in den Einstellungen (Sprachmodelle wechseln und neu laden)
+
+Warum CaptionBurn:
+- Privacy-first: Dein Quellvideo bleibt auf deinem Gerät
+- Creator-freundlich: Untertitel vor dem finalen Render anpassen
+- Mobile-first: Video wählen, untertiteln, stylen, exportieren – in einer App
+
+Perfekt für:
+- Social-Video-Creator
+- Lehrkräfte und Coaches
+- Mehrsprachige Veröffentlichungen
+- Alle, die lesbare, barrierearme Videos mit minimalem Aufwand wollen
