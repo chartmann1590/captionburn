@@ -225,7 +225,9 @@ fun SettingsScreen(
                 }
             }
             Spacer(Modifier.height(20.dp))
-            Text(text = "More Apps", style = MaterialTheme.typography.titleMedium)
+            // Dynamic cross-promotion: discovered from the Play developer page on
+            // the backend; renders nothing (hides silently) when unavailable.
+            com.hartmann.crosspromo.ui.HartmannCrossPromoRow(placement = "settings")
             Spacer(Modifier.height(8.dp))
             Card(
                 onClick = onOpenMoreApps,
@@ -247,9 +249,9 @@ fun SettingsScreen(
                         modifier = Modifier.padding(end = 12.dp)
                     )
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("More apps from this developer", style = MaterialTheme.typography.bodyLarge)
+                        Text("See all apps from this developer", style = MaterialTheme.typography.bodyLarge)
                         Text(
-                            "Check out our other privacy-first apps",
+                            "Open the full Hartmann Studios Play listing",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
