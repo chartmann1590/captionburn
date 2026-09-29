@@ -1,0 +1,7 @@
+<resources>
+    <declare-styleable name="HartmannPromoRecyclerView">
+        <attr name="placement" format="string" />
+        <attr name="sectionLabel" format="string" />
+        <attr name="maxCards" format="integer" />
+    </declare-styleable>
+</resources>

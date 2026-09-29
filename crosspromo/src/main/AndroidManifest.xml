@@ -1,0 +1,5 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Cross promotion only needs network access. No QUERY_ALL_PACKAGES, no
+         ad ID, no installed-app queries. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+</manifest>

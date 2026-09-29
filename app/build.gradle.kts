@@ -41,6 +41,7 @@ android {
         buildConfigField("String", "ADMOB_BANNER_AD_UNIT_ID", "\"${localProperty("admob.banner.id")}\"")
         buildConfigField("String", "ADMOB_INTERSTITIAL_AD_UNIT_ID", "\"${localProperty("admob.interstitial.id")}\"")
         buildConfigField("String", "ADMOB_NATIVE_ADVANCED_AD_UNIT_ID", "\"${localProperty("admob.native.advanced.id")}\"")
+        buildConfigField("String", "CROSS_PROMO_URL", "\"${localProperty("crosspromo.url")}\"")
         externalNativeBuild {
             cmake {
                 cppFlags += "-std=c++17 -O3 -ffast-math"
@@ -140,6 +141,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":crosspromo"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)

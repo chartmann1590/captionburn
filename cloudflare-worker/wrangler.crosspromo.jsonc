@@ -1,0 +1,29 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "crosspromo-hartmann",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-13",
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  "kv_namespaces": [
+    {
+      "binding": "CROSSPROMO_KV",
+      "id": "bfbbe5a18dea4003a15e847c9adf8157"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "CROSSPROMO_D1",
+      "database_name": "hartmann-crosspromo",
+      "database_id": "6e3d1c29-6834-445f-b8a6-3b81e69e0277"
+    }
+  ],
+  "triggers": {
+    "crons": ["0 */6 * * *"]
+  }
+  // Secrets (never in this file):
+  //   ADMIN_TOKEN — set with `npx wrangler secret put ADMIN_TOKEN -c wrangler.crosspromo.jsonc`
+  // Optional: DEVELOPER_NAME, DEVELOPER_PAGE_PATH override the Hartmann Studios defaults.
+}
