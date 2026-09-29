@@ -1,0 +1,26 @@
+CaptionBurn convierte vídeos hablados en clips subtitulados y listos para compartir, directamente en tu dispositivo Android.
+
+Importa un vídeo, genera subtítulos precisos con reconocimiento de voz en el dispositivo, ajusta el estilo y exporta un vídeo terminado con subtítulos incrustados, listo para publicar.
+
+Pensado para creadores que necesitan resultados rápidos sin subir nada a la nube.
+
+Funciones:
+- Transcripción en el dispositivo con Whisper (sin transcripción en la nube)
+- Elige el idioma hablado o deja la detección automática
+- Traducción integrada para subtítulos en varios idiomas
+- Subtítulos incrustados visibles en todas las plataformas
+- Controles de estilo: tamaño, contorno, posición y efectos de resaltado
+- Edición de cada segmento antes de exportar
+- Exporta, reproduce y comparte desde tu teléfono
+- Gestión de modelos en Ajustes (cambia y vuelve a descargar modelos de voz)
+
+Por qué CaptionBurn:
+- Privacidad primero: tu vídeo original se queda en tu dispositivo
+- Edición para creadores: ajusta los subtítulos antes del render final
+- Flujo móvil: elige vídeo, subtitula, aplica estilo y exporta en una sola app
+
+Perfecto para:
+- Creadores de vídeo social
+- Docentes y formadores
+- Publicación de contenido multilingüe
+- Cualquier persona que quiera vídeos legibles y accesibles con mínimo esfuerzo

@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.charlesh.captionburn.data.transcription.TranscriptionLanguages
 import com.charlesh.captionburn.ui.onboarding.WhisperModelChoice
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -36,6 +37,16 @@ class SettingsRepository @Inject constructor(
 
     val anonymousId: Flow<String> = ds.data.map { it[KEY_ANONYMOUS_ID] ?: "" }
 
+    /**
+     * ISO-639-1 code of the language to force during transcription, or null
+     * when the user wants Whisper to auto-detect (the default).
+     */
+    val transcriptionLanguage: Flow<String?> = ds.data.map { prefs ->
+        prefs[KEY_TRANSCRIPTION_LANGUAGE]?.takeIf { code ->
+            code.isNotBlank() && TranscriptionLanguages.isValid(code)
+        }
+    }
+
     suspend fun getOrCreateAnonymousId(): String {
         // Run first check to see if it exists
         val current = ds.data.map { it[KEY_ANONYMOUS_ID] }.first()
@@ -53,6 +64,15 @@ class SettingsRepository @Inject constructor(
 
     suspend fun clearInstalledModel() {
         ds.edit { it.remove(KEY_INSTALLED_MODEL) }
+    }
+
+    suspend fun setTranscriptionLanguage(code: String?) {
+        if (code == null) {
+            ds.edit { it.remove(KEY_TRANSCRIPTION_LANGUAGE) }
+        } else {
+            require(TranscriptionLanguages.isValid(code)) { "Unknown transcription language: $code" }
+            ds.edit { it[KEY_TRANSCRIPTION_LANGUAGE] = code }
+        }
     }
 
     suspend fun setWifiOnly(value: Boolean) {
@@ -78,5 +98,6 @@ class SettingsRepository @Inject constructor(
         val KEY_TELEMETRY = booleanPreferencesKey("telemetry_enabled")
         val KEY_HOME_TIP_DISMISSED = booleanPreferencesKey("home_tip_dismissed")
         val KEY_ANONYMOUS_ID = stringPreferencesKey("anonymous_user_id")
+        val KEY_TRANSCRIPTION_LANGUAGE = stringPreferencesKey("transcription_language")
     }
 }

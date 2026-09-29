@@ -1,1 +1,1 @@
-Auto-caption and burn subtitles into videos on-device, with translation.
+Auto-caption videos on-device, pick the spoken language, and burn in subtitles.

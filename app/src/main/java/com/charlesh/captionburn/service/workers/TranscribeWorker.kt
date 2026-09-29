@@ -37,10 +37,12 @@ class TranscribeWorker @AssistedInject constructor(
 
         val model = settings.installedModel.first()
             ?: return Result.failure(PipelineWorkData.failure("No Whisper model configured. Complete onboarding first.", retryable = false))
+        val languageHint = settings.transcriptionLanguage.first()
 
         telemetry.logEvent("transcribe_started", mapOf(
             "projectId" to projectId,
-            "model" to model.name
+            "model" to model.name,
+            "language" to (languageHint ?: "auto")
         ))
         val trace = telemetry.startTrace("transcribe_job_duration")
         trace.putAttribute("model", model.name)
@@ -49,6 +51,7 @@ class TranscribeWorker @AssistedInject constructor(
             sourceUri = Uri.parse(project.sourceUri),
             projectId = projectId,
             modelChoice = model,
+            languageHint = languageHint,
         ).first { progress ->
             when (progress) {
                 is TranscriptionProgress.ExtractingAudio -> {

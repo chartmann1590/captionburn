@@ -216,4 +216,5 @@ Before flipping production ad units live in AdMob:
 - **Crash reporting** — none configured. Add Firebase Crashlytics later if needed.
 - **In-app updates** — not configured. The app is small; users update via the store.
 - **In-app review prompt** — not implemented. Worth adding in v0.2.
-- **Multiple languages** — listing is English-only for now. Add localizations after v0.1 ships.
+- **Multiple languages** — localized listings (short + full description) exist for de-DE, es-ES, fr-FR, it-IT, pt-BR, ja-JP, ko-KR, ru-RU, hi-IN and ar under `marketing/play-store/upload/01-listing/<locale>/`; per-locale "What's new" release notes live in `distribution/whatsnew/` and are uploaded automatically by the Play publish workflow. Add more languages by creating a new `<locale>` folder there and a matching `whatsnew-<locale>` file.
+  - Pending once translations are in Play Console: localized screenshots and graphics (currently en-US assets are reused for every language).

@@ -1,0 +1,5 @@
+New: transcription language picker
+
+You can now choose the spoken language before transcribing — or leave it on auto-detect as before. Pick from 100 languages in Settings → Transcription language. Great for accented speech, short clips, or when auto-detect picks the wrong language.
+
+- Fixed: non-English audio could fall back to English in rare cases

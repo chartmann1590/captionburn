@@ -1,0 +1,5 @@
+Novidade: seletor de idioma de transcrição
+
+Agora você pode escolher o idioma falado antes de transcrever, ou deixar na detecção automática como antes. 100 idiomas em Configurações → Idioma de transcrição. Ótimo para sotaques, clipes curtos ou quando a detecção automática erra.
+
+- Corrigido: áudio em outros idiomas podia voltar em inglês em casos raros

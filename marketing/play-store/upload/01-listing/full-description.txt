@@ -6,6 +6,7 @@ Everything is designed for creators who need fast results without cloud upload d
 
 Key features:
 - On-device transcription powered by Whisper (no cloud transcription required)
+- Transcription language picker: choose the spoken language or leave it on auto-detect
 - Built-in translation support for multilingual subtitle output
 - Burned-in captions that stay visible on every platform
 - Caption style controls for size, outline, placement, and highlight effects
