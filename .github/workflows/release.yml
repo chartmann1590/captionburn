@@ -112,12 +112,25 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x gradlew
 
-      - name: Assemble release APKs + AAB
+      - name: Assemble release AAB (ABI splits off)
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: ./gradlew :app:assembleRelease :app:bundleRelease --no-daemon
+        # AGP 8.13+ fails buildReleasePreBundle when per-ABI shrunk-resource
+        # artifacts exist (issuetracker 402800800); Play generates its own
+        # split APKs from the bundle.
+        run: ./gradlew :app:bundleRelease -PenableAbiSplits=false --no-daemon
+
+      - name: Clear bundle-only intermediates
+        run: rm -rf app/build/intermediates/shrunk_resources_proto_format
+
+      - name: Assemble release APKs (per-ABI, ABI splits on)
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew :app:assembleRelease -PenableAbiSplits=true --no-daemon
 
       - name: Verify 16 KB page-size alignment (compliance gate)
         run: |
