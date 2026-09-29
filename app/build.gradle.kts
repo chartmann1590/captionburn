@@ -23,14 +23,14 @@ fun localProperty(name: String): String = localProperties.getProperty(name, "")
 
 android {
     namespace = "com.charlesh.captionburn"
-    compileSdk = 35
+    compileSdk = 36
     // NDK r28+ produces 16 KB–aligned native libs by default (16 KB page size support).
     ndkVersion = "28.2.13676358"
 
     defaultConfig {
         applicationId = "com.charlesh.captionburn"
         minSdk = 33
-        targetSdk = 35
+        targetSdk = 36
         versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
         versionName = System.getenv("VERSION_NAME") ?: "0.1.0"
 
@@ -88,7 +88,12 @@ android {
 
     splits {
         abi {
-            isEnable = true
+            // Per-ABI APKs are only for direct distribution (GitHub Releases).
+            // Play AABs must build with splits disabled: AGP 8.13+ fails
+            // buildReleasePreBundle when multiple per-split shrunk-resource
+            // files exist (issuetracker 402800800) — Play generates its own
+            // split APKs from the bundle.
+            isEnable = (project.findProperty("enableAbiSplits") as? String)?.toBooleanStrictOrNull() ?: true
             reset()
             include("arm64-v8a", "armeabi-v7a", "x86_64")
             isUniversalApk = false

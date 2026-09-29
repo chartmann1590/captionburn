@@ -88,7 +88,10 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: ./gradlew :app:bundleRelease --no-daemon
+        # ABI splits stay off for AABs: Play generates its own split APKs from
+        # the bundle, and AGP 8.13+ fails the prebundle check when per-ABI
+        # shrunk-resource artifacts exist (issuetracker 402800800).
+        run: ./gradlew :app:bundleRelease -PenableAbiSplits=false --no-daemon
 
       - name: Generate release notes
         run: |
