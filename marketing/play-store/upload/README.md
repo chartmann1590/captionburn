@@ -8,7 +8,9 @@ upload/
 │   ├── title.txt                  → App name (max 30 chars)
 │   ├── short-description.txt      → Short description (max 80 chars)
 │   ├── full-description.txt       → Full description (max 4000 chars)
-│   └── contact.txt                → Email, website, privacy URL, category, tags, audience
+│   ├── contact.txt                → Email, website, privacy URL, category, tags, audience
+│   ├── de-DE/ es-ES/ fr-FR/ it-IT/ pt-BR/          → Localized short + full description
+│   └── ja-JP/ ko-KR/ ru-RU/ hi-IN/ ar/             → (one folder per listing language)
 │
 ├── 02-graphics/                   ← Graphic assets in "Main store listing"
 │   ├── app-icon-512x512.png       → Hi-res app icon (512×512, required)
@@ -54,9 +56,20 @@ upload/
 | **Main store listing → Phone screenshots** | All 5 PNGs in `03-screenshots/phone/` |
 | **Main store listing → 7-inch tablet screenshots** | All 5 PNGs in `03-screenshots/tablet-7-inch/` |
 | **Main store listing → 10-inch tablet screenshots** | All 5 PNGs in `03-screenshots/tablet-10-inch/` |
+| **Main store listing → Manage translations → <Language> → Short/Full description** | `01-listing/<locale>/short-description.txt` and `01-listing/<locale>/full-description.txt` (de-DE, es-ES, fr-FR, it-IT, pt-BR, ja-JP, ko-KR, ru-RU, hi-IN, ar) |
 | **Store settings → Category** | `Video Players & Editors` (see `01-listing/contact.txt`) |
 | **Store settings → Tags** | `01-listing/contact.txt` |
 | **Store settings → Contact email / Website / Privacy** | `01-listing/contact.txt` |
+
+## Release notes (What's new)
+
+`distribution/whatsnew/` in the repo root holds the per-locale "What's new" text
+uploaded automatically by the Play publish workflow
+(`whatsnew-en-US`, `whatsnew-de-DE`, `whatsnew-es-ES`, `whatsnew-fr-FR`,
+`whatsnew-it-IT`, `whatsnew-pt-BR`, `whatsnew-ja-JP`, `whatsnew-ko-KR`,
+`whatsnew-ru-RU`, `whatsnew-hi-IN`, `whatsnew-ar`). Each file is limited to 500
+characters. When a release adds a user-facing feature, update **all** of these
+files plus the localized listings above.
 
 ## Notes
 
