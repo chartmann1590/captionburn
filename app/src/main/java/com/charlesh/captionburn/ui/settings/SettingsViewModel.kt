@@ -13,6 +13,7 @@ import com.charlesh.captionburn.data.transcription.DownloadEvent
 import com.charlesh.captionburn.data.transcription.ModelDownloadHttpException
 import com.charlesh.captionburn.data.transcription.ModelDownloader
 import com.charlesh.captionburn.data.transcription.ModelIntegrityException
+import com.charlesh.captionburn.data.transcription.TranscriptionLanguages
 import com.charlesh.captionburn.data.transcription.WhisperModelCatalog
 import com.charlesh.captionburn.ui.onboarding.WhisperModelChoice
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -43,15 +44,23 @@ class SettingsViewModel @Inject constructor(
                 settingsRepository.installedModel,
                 settingsRepository.wifiOnlyDownloads,
                 settingsRepository.telemetryEnabled,
+                settingsRepository.transcriptionLanguage,
                 feedbackRepository.savedIssues,
-            ) { installedModel, wifiOnly, telemetryEnabled, savedIssues ->
-                SettingsCombineResult(installedModel, wifiOnly, telemetryEnabled, savedIssues)
+            ) { installedModel, wifiOnly, telemetryEnabled, transcriptionLanguage, savedIssues ->
+                SettingsCombineResult(
+                    installedModel,
+                    wifiOnly,
+                    telemetryEnabled,
+                    transcriptionLanguage,
+                    savedIssues,
+                )
             }.collect { combined ->
                 _state.update {
                     it.copy(
                         installedModel = combined.installedModel,
                         wifiOnly = combined.wifiOnly,
                         telemetryEnabled = combined.telemetryEnabled,
+                        transcriptionLanguage = combined.transcriptionLanguage,
                         savedIssues = combined.savedIssues,
                     )
                 }
@@ -65,6 +74,20 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun setTranscriptionLanguage(code: String?) {
+        val language = code?.let { TranscriptionLanguages.byCodeOrNull(it) } ?: return
+        viewModelScope.launch {
+            settingsRepository.setTranscriptionLanguage(language.code)
+        }
+    }
+
+    /** Passing null (or an unknown code) returns the setting to auto-detect. */
+    fun clearTranscriptionLanguage() {
+        viewModelScope.launch {
+            settingsRepository.setTranscriptionLanguage(null)
+        }
+    }
+    
     fun toggleTelemetry() {
         viewModelScope.launch {
             settingsRepository.setTelemetryEnabled(!_state.value.telemetryEnabled)
@@ -416,6 +439,7 @@ private data class SettingsCombineResult(
     val installedModel: WhisperModelChoice?,
     val wifiOnly: Boolean,
     val telemetryEnabled: Boolean,
+    val transcriptionLanguage: String?,
     val savedIssues: List<SavedFeedbackIssue>
 )
 
@@ -423,6 +447,7 @@ data class SettingsState(
     val installedModel: WhisperModelChoice? = null,
     val wifiOnly: Boolean = true,
     val telemetryEnabled: Boolean = true,
+    val transcriptionLanguage: String? = null,
     val isDownloading: Boolean = false,
     val activeModelChoice: WhisperModelChoice? = null,
     val downloadProgress: Float = 0f,

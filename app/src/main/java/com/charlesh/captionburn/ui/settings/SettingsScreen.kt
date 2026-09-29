@@ -51,9 +51,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.rounded.Apps
 import androidx.compose.material.icons.rounded.BugReport
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,6 +65,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.charlesh.captionburn.ui.onboarding.WhisperModelChoice
+import com.charlesh.captionburn.data.transcription.TranscriptionLanguages
 
 @Composable
 fun SettingsScreen(
@@ -145,6 +149,13 @@ fun SettingsScreen(
             ) {
                 Text("Delete installed model")
             }
+            Spacer(Modifier.height(20.dp))
+            TranscriptionLanguageSection(
+                selectedCode = state.transcriptionLanguage,
+                enabled = !state.isDownloading,
+                onSelect = { code -> viewModel.setTranscriptionLanguage(code) },
+                onClear = { viewModel.clearTranscriptionLanguage() },
+            )
             Spacer(Modifier.height(20.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -775,6 +786,73 @@ private fun ModelChoiceCard(
             }
             Button(onClick = onInstall, enabled = enabled) {
                 Text(if (selected) "Re-download" else "Switch")
+            }
+        }
+    }
+}
+
+@Composable
+private fun TranscriptionLanguageSection(
+    selectedCode: String?,
+    enabled: Boolean,
+    onSelect: (String) -> Unit,
+    onClear: () -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val selected = TranscriptionLanguages.byCodeOrNull(selectedCode)
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(text = "Transcription language", style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = "Language of the audio in your videos. Leave on auto-detect unless detection keeps getting it wrong.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(10.dp))
+        Box {
+            OutlinedButton(
+                onClick = { expanded = true },
+                enabled = enabled,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(
+                    text = selected?.let { "${it.displayName} (${it.code.uppercase()})" } ?: "Auto-detect",
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier.heightIn(max = 360.dp),
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Auto-detect") },
+                    trailingIcon = {
+                        if (selected == null) {
+                            Icon(Icons.Rounded.Check, contentDescription = "Selected")
+                        }
+                    },
+                    onClick = {
+                        expanded = false
+                        onClear()
+                    },
+                )
+                HorizontalDivider()
+                TranscriptionLanguages.all.forEach { language ->
+                    DropdownMenuItem(
+                        text = { Text("${language.displayName} (${language.code.uppercase()})") },
+                        trailingIcon = {
+                            if (selected?.code == language.code) {
+                                Icon(Icons.Rounded.Check, contentDescription = "Selected")
+                            }
+                        },
+                        onClick = {
+                            expanded = false
+                            onSelect(language.code)
+                        },
+                    )
+                }
             }
         }
     }

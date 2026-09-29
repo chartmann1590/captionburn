@@ -351,7 +351,10 @@ Java_com_charlesh_captionburn_data_transcription_WhisperJni_nativeTranscribe(
         p2.single_segment    = false;
         p2.suppress_blank    = false;
         p2.detect_language   = false;
-        p2.language          = "en";
+        // Respect the caller's language hint when retrying; "en" remains the
+        // conservative default for auto-detect runs (detection already ran in
+        // the first pass).
+        p2.language          = hint.empty() ? "en" : hint.c_str();
         p2.n_threads         = t;
         p2.beam_search.beam_size = 5;
         p2.new_segment_callback = [](whisper_context * ctx2, whisper_state *, int, void *) {
