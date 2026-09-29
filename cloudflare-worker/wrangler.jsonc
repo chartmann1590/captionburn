@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "captionburn-github-feedback",
-  "main": "src/index.ts",
+  "main": "src/feedback.ts",
   "compatibility_date": "2026-08-13",
   "observability": {
     "enabled": true,

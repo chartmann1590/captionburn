@@ -79,7 +79,11 @@ class HartmannPromoRecyclerView @JvmOverloads constructor(
 
     private fun onAppClicked(app: PromoApp, position: Int, requestId: String?) {
         HartmannCrossPromo.click(placement, app, app.selectionType, position + 1, requestId)
-        PlayStoreLauncher.openPlayStore(context, app.packageName)
+        PlayStoreLauncher.openPlayStore(
+            context,
+            app.packageName,
+            referrer = PlayStoreLauncher.buildReferrer(HartmannCrossPromo.sourcePackage, app.packageName),
+        )
     }
 
     private fun onAppImpression(app: PromoApp, position: Int, requestId: String?) {

@@ -61,4 +61,27 @@ class PlayStoreLauncherTest {
         // covered above. This test documents the intent shapes.
         assertThat(market.action).isEqualTo(Intent.ACTION_VIEW)
     }
+
+    @Test
+    fun `referrer encodes utm attribution for the Install Referrer API`() {
+        val referrer = PlayStoreLauncher.buildReferrer("com.charlesh.captionburn", "com.target.app")
+        // Referrer value must be percent-encoded once as a whole (double-encoded
+        // inner separators) so it survives as a single query parameter.
+        assertThat(referrer).doesNotContain("&")
+        assertThat(referrer).doesNotContain("=")
+        val decoded = java.net.URLDecoder.decode(referrer, "UTF-8")
+        assertThat(decoded).isEqualTo(
+            "utm_source=com.charlesh.captionburn&utm_medium=crosspromo&utm_content=com.target.app",
+        )
+    }
+
+    @Test
+    fun `launch URLs carry the referrer parameter`() {
+        val referrer = PlayStoreLauncher.buildReferrer("com.src", "com.tgt")
+        val market = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.tgt&referrer=$referrer"))
+        val url = market.data!!
+        assertThat(url.getQueryParameter("id")).isEqualTo("com.tgt")
+        assertThat(url.getQueryParameter("referrer"))
+            .isEqualTo(java.net.URLDecoder.decode(referrer, "UTF-8"))
+    }
 }

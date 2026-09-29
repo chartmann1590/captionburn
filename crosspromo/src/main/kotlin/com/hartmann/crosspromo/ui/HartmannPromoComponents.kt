@@ -74,7 +74,14 @@ fun HartmannPromoCard(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         onClick = {
             HartmannCrossPromo.click(placement, app, app.selectionType, rankPosition, requestId)
-            PlayStoreLauncher.openPlayStore(context, app.packageName)
+            PlayStoreLauncher.openPlayStore(
+                context,
+                app.packageName,
+                referrer = PlayStoreLauncher.buildReferrer(
+                    HartmannCrossPromo.sourcePackage,
+                    app.packageName,
+                ),
+            )
         },
     ) {
         Column(Modifier.padding(12.dp)) {
@@ -118,7 +125,14 @@ fun HartmannPromoCard(
             Spacer(Modifier.size(4.dp))
             TextButton(onClick = {
                 HartmannCrossPromo.click(placement, app, app.selectionType, rankPosition, requestId)
-                PlayStoreLauncher.openPlayStore(context, app.packageName)
+                PlayStoreLauncher.openPlayStore(
+                    context,
+                    app.packageName,
+                    referrer = PlayStoreLauncher.buildReferrer(
+                        HartmannCrossPromo.sourcePackage,
+                        app.packageName,
+                    ),
+                )
             }) {
                 Text("View app")
             }
@@ -127,7 +141,8 @@ fun HartmannPromoCard(
 }
 
 /**
- * Vertical promo list (stacked cards). Renders nothing when there is no content.
+ * Vertical promo list (stacked cards). Renders nothing when there is no content
+ * or when the SDK was never initialized.
  */
 @Composable
 fun HartmannPromoList(
@@ -136,15 +151,16 @@ fun HartmannPromoList(
     sectionLabel: String = "More from Hartmann Studios",
     maxCards: Int = 3,
 ) {
+    val repo = HartmannCrossPromo.repository(placement) ?: return
     var state by remember(placement) {
-        mutableStateOf(HartmannCrossPromo.repository(placement).state.value)
+        mutableStateOf(repo.state.value)
     }
     var loaded by remember(placement) { mutableStateOf(false) }
 
     LaunchedEffect(placement, maxCards) {
-        val repo = HartmannCrossPromo.repository(placement)
+        val current = HartmannCrossPromo.repository(placement) ?: return@LaunchedEffect
         val collectJob = launch {
-            repo.state.collect { state = it }
+            current.state.collect { state = it }
         }
         HartmannCrossPromo.loadPlacement(placement, maxCards) { }
         loaded = true
@@ -176,7 +192,7 @@ fun HartmannPromoList(
 
 /**
  * Horizontal promo carousel — the default safe layout: one row, 2-3 cards.
- * Renders nothing when there is no content.
+ * Renders nothing when there is no content or when the SDK was never initialized.
  */
 @Composable
 fun HartmannPromoCarousel(
@@ -186,14 +202,15 @@ fun HartmannPromoCarousel(
     maxCards: Int = 3,
     cardWidth: Int = 260,
 ) {
+    val repo = HartmannCrossPromo.repository(placement) ?: return
     var state by remember(placement) {
-        mutableStateOf(HartmannCrossPromo.repository(placement).state.value)
+        mutableStateOf(repo.state.value)
     }
 
     LaunchedEffect(placement, maxCards) {
-        val repo = HartmannCrossPromo.repository(placement)
+        val current = HartmannCrossPromo.repository(placement) ?: return@LaunchedEffect
         val collectJob = launch {
-            repo.state.collect { state = it }
+            current.state.collect { state = it }
         }
         HartmannCrossPromo.loadPlacement(placement, maxCards) { }
         collectJob.join()

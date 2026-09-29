@@ -226,7 +226,8 @@ fun SettingsScreen(
             }
             Spacer(Modifier.height(20.dp))
             // Dynamic cross-promotion: discovered from the Play developer page on
-            // the backend; renders nothing (hides silently) when unavailable.
+            // the backend; renders nothing (hides silently) when unavailable or
+            // when the SDK is uninitialized (builds without `crosspromo.url`).
             com.hartmann.crosspromo.ui.HartmannCrossPromoRow(placement = "settings")
             Spacer(Modifier.height(8.dp))
             Card(

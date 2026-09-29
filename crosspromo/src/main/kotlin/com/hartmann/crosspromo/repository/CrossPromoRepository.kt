@@ -77,9 +77,14 @@ class CrossPromoRepository(
                     )
                     rememberTargets(response)
                     _state.value = PromoState(response.apps, response.requestId, isFromCache = false)
-                } else if (_state.value.apps.isEmpty()) {
-                    // Empty catalog / disabled: keep whatever was cached; otherwise hide.
-                    _state.value = PromoState(emptyList())
+                } else {
+                    // Authoritative empty response (empty catalog, disabled via kill
+                    // switch, or no eligible targets): the backend has spoken, so
+                    // drop cached content instead of promoting it forever. Only
+                    // transport failures keep stale cards visible.
+                    cache.clear(sourcePackage, placement)
+                    rememberTargets(response)
+                    _state.value = PromoState(emptyList(), response.requestId, isFromCache = false)
                 }
             }
             is PromoResult.Failure -> {

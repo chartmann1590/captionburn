@@ -39,6 +39,10 @@ object HartmannCrossPromo {
     var analytics: PromoAnalytics = NoOpAnalytics()
         private set
 
+    /** True after [initialize]. Composables must hide promo UI when false. */
+    var isInitialized: Boolean = false
+        private set
+
     lateinit var sourcePackage: String
         private set
 
@@ -61,11 +65,25 @@ object HartmannCrossPromo {
         this.sourcePackage = context.packageName
         this.apiBaseUrl = apiBaseUrl
         this.analytics = analytics
+        this.isInitialized = true
     }
 
-    /** Repository per placement so each placement caches and rotates independently. */
-    fun repository(placement: String): CrossPromoRepository =
-        repositories.getOrPut(placement) {
+    /** Test-only: restores the pre-initialize state. */
+    internal fun resetForTests() {
+        repositories.clear()
+        isInitialized = false
+        apiBaseUrl = ""
+        analytics = NoOpAnalytics()
+    }
+
+    /**
+     * Repository per placement so each placement caches and rotates independently.
+     * Returns null before [initialize] (e.g. hosts without a configured backend
+     * URL) so callers can degrade to no UI instead of crashing.
+     */
+    fun repository(placement: String): CrossPromoRepository? {
+        if (!isInitialized) return null
+        return repositories.getOrPut(placement) {
             CrossPromoRepository(
                 api = api,
                 cache = cache,
@@ -74,14 +92,17 @@ object HartmannCrossPromo {
                 sdkVersion = SDK_VERSION,
             )
         }
+    }
 
+    /** No-op before [initialize]: host apps without a backend never see promos. */
     fun loadPlacement(
         placement: String,
         limit: Int = 3,
         onState: (PromoState) -> Unit = {},
     ) {
+        val repo = repository(placement) ?: return
         scope.launch {
-            val state = repository(placement).loadForPlacement(placement, limit)
+            val state = repo.loadForPlacement(placement, limit)
             onState(state)
         }
     }
@@ -93,6 +114,7 @@ object HartmannCrossPromo {
         rankPosition: Int,
         requestId: String?,
     ) {
+        if (!isInitialized) return
         analytics.impression(
             com.hartmann.crosspromo.analytics.PromoEventParams(
                 sourcePackage = sourcePackage,
@@ -114,6 +136,7 @@ object HartmannCrossPromo {
         rankPosition: Int,
         requestId: String?,
     ) {
+        if (!isInitialized) return
         analytics.click(
             com.hartmann.crosspromo.analytics.PromoEventParams(
                 sourcePackage = sourcePackage,

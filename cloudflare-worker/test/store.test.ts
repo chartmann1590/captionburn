@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { CatalogApp, DiscoveredCatalog } from '../src/types';
-import { KvCatalogStore, validateCatalogRefresh } from '../src/store';
+import { KvCatalogStore, retainPreviousMetadata, validateCatalogRefresh } from '../src/store';
 
 function app(pkg: string, overrides: Partial<CatalogApp> = {}): CatalogApp {
   return {
@@ -87,6 +87,86 @@ describe('validateCatalogRefresh', () => {
     expect(validateCatalogRefresh(previous, next).accepted).toBe(true);
     const next4 = Array.from({ length: 4 }, (_, i) => app(`com.x.${i}`));
     expect(validateCatalogRefresh(previous, next4).accepted).toBe(false);
+  });
+});
+
+describe('retainPreviousMetadata', () => {
+  it('keeps previously scraped rich metadata when details enrichment failed', () => {
+    const previous = app('com.a.b', {
+      name: 'Old Name',
+      shortDescription: 'Great app',
+      rating: 4.5,
+      reviewCount: 1234,
+      installText: '100K+',
+      estimatedMinimumInstalls: 100000,
+      category: 'Tools',
+      lastMetadataRefresh: '2026-09-01T00:00:00Z',
+    });
+    const listingOnly = app('com.a.b', {
+      name: 'New Name From Listing',
+      lastSeenAt: '2026-09-29T00:00:00Z',
+      lastMetadataRefresh: null,
+    });
+    const merged = retainPreviousMetadata(listingOnly, previous);
+    // Rich metadata retained from the last successful scrape:
+    expect(merged.rating).toBe(4.5);
+    expect(merged.reviewCount).toBe(1234);
+    expect(merged.installText).toBe('100K+');
+    expect(merged.estimatedMinimumInstalls).toBe(100000);
+    expect(merged.category).toBe('Tools');
+    expect(merged.shortDescription).toBe('Great app');
+    expect(merged.lastMetadataRefresh).toBe('2026-09-01T00:00:00Z');
+    // Listing-derived control fields still update:
+    expect(merged.name).toBe('New Name From Listing');
+    expect(merged.lastSeenAt).toBe('2026-09-29T00:00:00Z');
+  });
+
+  it('retention is applied only to failed apps — successful scrapes overwrite', async () => {
+    const kv = kvStub();
+    const store = new KvCatalogStore(kv);
+    await store.commitDiscoveredCatalog(
+      discovered([
+        app('com.ok.app', { rating: 4.1, reviewCount: 10 }),
+        app('com.bad.app', { rating: 3.0, reviewCount: 20 }),
+      ]),
+    );
+    const next: DiscoveredCatalog = {
+      ...discovered([
+        app('com.ok.app', { rating: 4.9, reviewCount: 11, lastMetadataRefresh: '2026-09-29T12:00:00Z' }),
+        app('com.bad.app', { name: 'Bad App (listing only)' }),
+      ]),
+      metadataFailures: [{ packageName: 'com.bad.app', error: 'details_fetch_failed status=503' }],
+    };
+    const result = await store.commitDiscoveredCatalog(next);
+    expect(result.accepted).toBe(true);
+    const catalog = (await store.getCurrentCatalog()) ?? [];
+    const byPkg = new Map(catalog.map((a) => [a.packageName, a]));
+    // Successful scrape overwrites everything:
+    expect(byPkg.get('com.ok.app')?.rating).toBe(4.9);
+    expect(byPkg.get('com.ok.app')?.reviewCount).toBe(11);
+    // Failed scrape retains the last known rich metadata:
+    expect(byPkg.get('com.bad.app')?.rating).toBe(3.0);
+    expect(byPkg.get('com.bad.app')?.reviewCount).toBe(20);
+    expect(byPkg.get('com.bad.app')?.name).toBe('Bad App (listing only)');
+  });
+
+  it('commitDiscoveredCatalog retains prior metadata for apps listed in metadataFailures', async () => {
+    const kv = kvStub();
+    const store = new KvCatalogStore(kv);
+    await store.commitDiscoveredCatalog(
+      discovered([app('com.a.b', { rating: 4.2, reviewCount: 999, installText: '50K+' })]),
+    );
+    const failed: DiscoveredCatalog = {
+      ...discovered([app('com.a.b', { name: 'Listed Name' })]),
+      metadataFailures: [{ packageName: 'com.a.b', error: 'details_fetch_failed status=503' }],
+    };
+    const result = await store.commitDiscoveredCatalog(failed);
+    expect(result.accepted).toBe(true);
+    const catalog = (await store.getCurrentCatalog()) ?? [];
+    expect(catalog[0].rating).toBe(4.2);
+    expect(catalog[0].reviewCount).toBe(999);
+    expect(catalog[0].installText).toBe('50K+');
+    expect(catalog[0].name).toBe('Listed Name');
   });
 });
 

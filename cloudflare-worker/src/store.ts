@@ -95,14 +95,18 @@ export class KvCatalogStore implements CatalogStore {
     // Carry forward history-aware fields from the existing catalog:
     // firstDiscoveredAt must survive refreshes, enabledForPromotion and
     // promotionMultiplier are server-controlled state that must not reset.
+    // Apps whose details enrichment failed this pass keep their previously
+    // scraped metadata instead of degrading to listing-only nulls.
+    const failedPackages = new Set(discovered.metadataFailures.map((f) => f.packageName));
     const previousByPkg = new Map((current ?? []).map((a) => [a.packageName, a]));
     const merged = discovered.apps.map((app) => {
       const prev = previousByPkg.get(app.packageName);
+      const base = prev && failedPackages.has(app.packageName) ? retainPreviousMetadata(app, prev) : app;
       return {
-        ...app,
-        firstDiscoveredAt: prev?.firstDiscoveredAt ?? app.firstDiscoveredAt,
-        enabledForPromotion: prev?.enabledForPromotion ?? app.enabledForPromotion,
-        promotionMultiplier: prev?.promotionMultiplier ?? app.promotionMultiplier,
+        ...base,
+        firstDiscoveredAt: prev?.firstDiscoveredAt ?? base.firstDiscoveredAt,
+        enabledForPromotion: prev?.enabledForPromotion ?? base.enabledForPromotion,
+        promotionMultiplier: prev?.promotionMultiplier ?? base.promotionMultiplier,
       };
     });
 
@@ -139,6 +143,35 @@ export interface RefreshValidation {
   reason?: string;
   newApps: string[];
   removedApps: string[];
+}
+
+/** Fields that only a successful details-page scrape may overwrite. */
+const METADATA_FIELDS = [
+  'shortDescription',
+  'fullDescription',
+  'rating',
+  'reviewCount',
+  'installText',
+  'estimatedMinimumInstalls',
+  'category',
+  'priceText',
+  'isFree',
+  'lastMetadataRefresh',
+] as const;
+
+/**
+ * A details-page failure must not erase what we already know about an app: the
+ * listing-derived fields (name, icon, developer, lastSeenAt) update normally,
+ * but rich metadata stays at its last successfully scraped values.
+ */
+export function retainPreviousMetadata(discovered: CatalogApp, previous: CatalogApp): CatalogApp {
+  const merged: CatalogApp = { ...discovered };
+  const target = merged as unknown as Record<string, unknown>;
+  const source = previous as unknown as Record<string, unknown>;
+  for (const field of METADATA_FIELDS) {
+    target[field] = source[field];
+  }
+  return merged;
 }
 
 /**
