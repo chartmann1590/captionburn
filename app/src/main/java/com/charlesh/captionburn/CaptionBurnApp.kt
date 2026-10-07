@@ -7,6 +7,7 @@ import com.charlesh.captionburn.data.logging.LocalFileLoggingTree
 import com.charlesh.captionburn.data.logging.TelemetryTimberTree
 import com.charlesh.captionburn.data.telemetry.TelemetryTracker
 import com.charlesh.captionburn.data.settings.SettingsRepository
+import com.charlesh.captionburn.crosspromo.CrossPromoInstaller
 import dagger.hilt.android.HiltAndroidApp
 import java.io.File
 import javax.inject.Inject
@@ -28,6 +29,9 @@ class CaptionBurnApp : Application(), Configuration.Provider {
         if (BuildConfig.ADMOB_APP_ID.isNotBlank()) {
             MobileAds.initialize(this)
         }
+        // Hartmann cross-promotion: dynamic "More from Hartmann Studios" section.
+        // No-ops unless crosspromo.url is set in local.properties.
+        CrossPromoInstaller.initialize(this)
         val localTree = LocalFileLoggingTree(logDir = File(filesDir, "logs"))
         Timber.plant(localTree)
         Timber.plant(TelemetryTimberTree(telemetryTracker))
