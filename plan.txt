@@ -137,7 +137,7 @@ Native Android Caption Burn-In App — Implementation Plan
  Phase 1 — Project bootstrap
 
  - settings.gradle.kts, build.gradle.kts (root + app), gradle/libs.versions.toml
- - AndroidManifest.xml: READ_MEDIA_VIDEO, POST_NOTIFICATIONS, FOREGROUND_SERVICE, FOREGROUND_SERVICE_DATA_SYNC, INTERNET (model download only)
+ - AndroidManifest.xml: (no media permission; system Photo Picker) POST_NOTIFICATIONS, FOREGROUND_SERVICE, FOREGROUND_SERVICE_DATA_SYNC, INTERNET (model download only)
  - CaptionBurnApp.kt (Hilt @HiltAndroidApp)
  - MainActivity.kt (single Activity, Compose host)
  - ui/theme/Theme.kt — Material 3 with dynamic color, custom typography

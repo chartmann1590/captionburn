@@ -1,5 +1,3 @@
-Novità: selettore della lingua di trascrizione
+Ora video e immagini si scelgono con il selettore di foto di Android, quindi CaptionBurn non chiede più alcuna autorizzazione per i contenuti multimediali.
 
-Ora puoi scegliere la lingua parlata prima della trascrizione, oppure lasciare il rilevamento automatico come prima. 100 lingue in Impostazioni → Lingua di trascrizione. Ideale per accenti, clip brevi o quando il rilevamento automatico sbaglia.
-
-- Corretto: l'audio non in inglese poteva tornare in inglese in rari casi
+- Correzioni minori

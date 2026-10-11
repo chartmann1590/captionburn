@@ -1,5 +1,3 @@
-New: transcription language picker
+Picking videos and images now uses the Android photo picker, so CaptionBurn no longer asks for any media permission.
 
-You can now choose the spoken language before transcribing — or leave it on auto-detect as before. Pick from 100 languages in Settings → Transcription language. Great for accented speech, short clips, or when auto-detect picks the wrong language.
-
-- Fixed: non-English audio could fall back to English in rare cases
+- Minor fixes
