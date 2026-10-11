@@ -1,5 +1,3 @@
-Neu: Auswahl der Transkriptionssprache
+Videos und Bilder werden jetzt über die Android-Fotoauswahl gewählt. CaptionBurn fragt daher keine Medienberechtigung mehr an.
 
-Du kannst jetzt die gesprochene Sprache vor der Transkription wählen – oder wie bisher die automatische Erkennung nutzen. 100 Sprachen unter Einstellungen → Transkriptionssprache. Ideal bei Akzenten, kurzen Clips oder wenn die automatische Erkennung danebensitzt.
-
-- Behoben: Nicht-englisches Audio fiel in seltenen Fällen auf Englisch zurück
+- Kleinere Fehlerbehebungen

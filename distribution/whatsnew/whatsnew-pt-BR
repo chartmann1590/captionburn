@@ -1,5 +1,3 @@
-Novidade: seletor de idioma de transcrição
+Agora vídeos e imagens são escolhidos pelo seletor de fotos do Android, então o CaptionBurn não pede mais nenhuma permissão de acesso a mídia.
 
-Agora você pode escolher o idioma falado antes de transcrever, ou deixar na detecção automática como antes. 100 idiomas em Configurações → Idioma de transcrição. Ótimo para sotaques, clipes curtos ou quando a detecção automática erra.
-
-- Corrigido: áudio em outros idiomas podia voltar em inglês em casos raros
+- Pequenas correções

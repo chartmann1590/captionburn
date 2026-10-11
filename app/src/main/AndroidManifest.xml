@@ -7,8 +7,14 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    <!-- Android 13+ granular media; we only ever read the user's video selection. -->
-    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <!-- Videos and images are chosen with the system Photo Picker (PickVisualMedia),
+         which grants access only to the picked item, so no media or storage permission
+         is requested. Strip any a library might merge in. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" tools:node="remove" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" tools:node="remove" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" tools:node="remove" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:node="remove" />
 
     <!-- Foreground service for long-running transcription / burn-in. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
