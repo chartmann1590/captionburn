@@ -66,11 +66,8 @@ class CrossPromoRepository(
                         CachedRecommendations(
                             response = response,
                             generatedAtMs = now,
-                            expiresAtMs = response.expiresAt?.let { expiresAt ->
-                                runCatching {
-                                    java.time.Instant.parse(expiresAt).toEpochMilli()
-                                }.getOrElse { now + DEFAULT_TTL_MS }
-                            } ?: (now + DEFAULT_TTL_MS),
+                            expiresAtMs = response.expiresAt?.let(::parseIso8601UtcMillis)
+                                ?: (now + DEFAULT_TTL_MS),
                             sourcePackage = sourcePackage,
                             placement = placement,
                         ),

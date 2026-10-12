@@ -27,6 +27,11 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+    lint {
+        // Full text report in the build output, so CI logs list every finding.
+        textReport = true
+        textOutput = file("stdout")
+    }
     buildFeatures {
         buildConfig = true
     }
