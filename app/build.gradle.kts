@@ -118,6 +118,11 @@ android {
         compose = true
         buildConfig = true
     }
+    lint {
+        // Full text report in the build output, so CI logs list every finding.
+        textReport = true
+        textOutput = file("stdout")
+    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
