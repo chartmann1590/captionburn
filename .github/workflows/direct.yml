@@ -1,0 +1,125 @@
+name: Direct download build + emulator test
+# Direct-download build of this app (GitHub Releases / charleshartmann.com): same code, built with store=direct
+# (no Google Play links, no Play in-app review prompt, nothing sold through Google Play). Emulator with Google APIs (a normal phone).
+# Branch builds only make a DRAFT release; nothing is uploaded to any store.
+on:
+  push:
+    branches: [direct-stripe]
+  workflow_dispatch: {}
+permissions:
+  contents: write
+concurrency:
+  group: direct-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  direct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: '17'
+    - uses: gradle/actions/setup-gradle@v4
+    - name: Compute version
+      id: version
+      run: |
+        CODE=$((${{ github.run_number }} + 100))
+        NAME="0.1.${{ github.run_number }}"
+        echo "code=$CODE" >> "$GITHUB_OUTPUT"
+        echo "name=$NAME" >> "$GITHUB_OUTPUT"
+        echo "VERSION_CODE=$CODE" >> "$GITHUB_ENV"
+        echo "VERSION_NAME=$NAME" >> "$GITHUB_ENV"
+        echo "Building versionCode=$CODE versionName=$NAME"
+    - name: Decode keystore
+      env:
+        KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+      run: |
+        echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+        echo "KEYSTORE_FILE=$RUNNER_TEMP/upload.jks" >> "$GITHUB_ENV"
+    - name: Write local.properties from secrets
+      env:
+        ADMOB_APP_ID: ${{ secrets.ADMOB_APP_ID }}
+        ADMOB_BANNER_AD_UNIT_ID: ${{ secrets.ADMOB_BANNER_AD_UNIT_ID }}
+        ADMOB_INTERSTITIAL_AD_UNIT_ID: ${{ secrets.ADMOB_INTERSTITIAL_AD_UNIT_ID }}
+        ADMOB_NATIVE_ADVANCED_AD_UNIT_ID: ${{ secrets.ADMOB_NATIVE_ADVANCED_AD_UNIT_ID }}
+      run: |
+        cat > local.properties <<EOF
+        admob.app.id=$ADMOB_APP_ID
+        admob.banner.id=$ADMOB_BANNER_AD_UNIT_ID
+        admob.interstitial.id=$ADMOB_INTERSTITIAL_AD_UNIT_ID
+        admob.native.advanced.id=$ADMOB_NATIVE_ADVANCED_AD_UNIT_ID
+        EOF
+    - name: Write real google-services.json from secret
+      env:
+        GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+      run: |
+        if [ -z "$GOOGLE_SERVICES_JSON" ]; then
+          echo "::error::GOOGLE_SERVICES_JSON secret is empty. Set it to the base64 of the real app/google-services.json."
+          exit 1
+        fi
+        echo "$GOOGLE_SERVICES_JSON" | base64 -d > app/google-services.json
+        # Sanity-check it is the real config, not the committed dummy placeholder.
+        if grep -q "dummy-project-id" app/google-services.json; then
+          echo "::error::Decoded google-services.json still contains placeholder values."
+          exit 1
+        fi
+        echo "google-services.json written ($(wc -c < app/google-services.json) bytes)."
+    - name: Make gradlew executable
+      run: chmod +x gradlew
+    - name: Build direct APK (store=direct)
+      env:
+        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      run: |
+        set -o pipefail
+        ./gradlew :app:assembleRelease -PenableAbiSplits=false -Pstore=direct --no-daemon 2>&1 | tee -a /tmp/dsk-build.log
+        cd "$GITHUB_WORKSPACE"
+        mkdir -p dsk-apk
+        A=$(find . -path "*/build/outputs/apk/*release*/*.apk" ! -name "*unsigned*" | head -1); [ -z "$A" ] && A=$(find . -path "*/build/outputs/apk/*release*/*.apk" | head -1)
+        cp "$A" dsk-apk/CaptionBurn-direct-release.apk
+        ls -la dsk-apk
+        BT=$ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -V | tail -1)
+        $BT/apksigner verify --print-certs dsk-apk/CaptionBurn-direct-release.apk | head -3 || true
+        $BT/aapt2 dump badging dsk-apk/CaptionBurn-direct-release.apk | head -3 || true
+        echo "--- Play Store URL strings left in the direct release dex:"; unzip -p dsk-apk/CaptionBurn-direct-release.apk "classes*.dex" | strings | grep -E "play\.google\.com/store|market://" | head || true
+    - name: Ship build log tail to the private drop (on failure)
+      if: failure()
+      env:
+        DROP_KEY: ${{ secrets.DROP_KEY }}
+      run: |
+        tail -c 60000 /tmp/dsk-build.log 2>/dev/null | curl -s -m 60 -X PUT -H "X-Key: $DROP_KEY" --data-binary @- "https://hs-apk-drop.charles-h-hartmann1.workers.dev/c/dsklog_${{ github.event.repository.name }}_r${{ github.run_number }}/0" || true
+    - name: Enable KVM
+      run: |
+        echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+        sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+    - name: Emulator test (Google APIs image, like a normal phone)
+      uses: reactivecircus/android-emulator-runner@v2
+      with:
+        api-level: 33
+        profile: pixel_5
+        target: google_apis
+        arch: x86_64
+        ram-size: 3072M
+        disk-size: 4096M
+        emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+        disable-animations: true
+        script: bash .github/direct/run-tests.sh
+    - name: Upload test results to Tab's private drop
+      if: always()
+      env:
+        DROP_KEY: ${{ secrets.DROP_KEY }}
+      run: |
+        bash .github/direct/direct-upload.sh /tmp/dsk-out dsk_CaptionBurn_r${{ github.run_number }}
+    - name: Draft release with the direct APK (not published)
+      if: success()
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: direct-${{ github.run_number }}
+        name: Direct build ${{ github.run_number }} (${{ github.sha }})
+        draft: true
+        files: dsk-apk/CaptionBurn-direct-release.apk

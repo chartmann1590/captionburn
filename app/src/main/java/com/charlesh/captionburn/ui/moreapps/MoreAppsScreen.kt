@@ -83,7 +83,7 @@ fun MoreAppsScreen(onBack: () -> Unit) {
             items(crossPromoApps) { app ->
                 Card(
                     onClick = {
-                        val url = "https://play.google.com/store/apps/details?id=${app.packageName}"
+                        val url = (if (com.charlesh.captionburn.BuildConfig.STORE == "direct") "https://charleshartmann.com/apps/" else "https://play.google.com/store/apps/details?id=${app.packageName}")
                         try {
                             context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
                         } catch (e: ActivityNotFoundException) {

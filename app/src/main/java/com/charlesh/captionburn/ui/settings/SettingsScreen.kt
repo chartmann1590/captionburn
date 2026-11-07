@@ -228,7 +228,8 @@ fun SettingsScreen(
             // Dynamic cross-promotion: discovered from the Play developer page on
             // the backend; renders nothing (hides silently) when unavailable or
             // when the SDK is uninitialized (builds without `crosspromo.url`).
-            com.hartmann.crosspromo.ui.HartmannCrossPromoRow(placement = "settings")
+            // Direct (non-Play) build: the dynamic row opens Google Play listings, so it is hidden there.
+            if (!(com.charlesh.captionburn.BuildConfig.STORE == "direct")) com.hartmann.crosspromo.ui.HartmannCrossPromoRow(placement = "settings")
             Spacer(Modifier.height(8.dp))
             Card(
                 onClick = onOpenMoreApps,
@@ -252,7 +253,7 @@ fun SettingsScreen(
                     Column(modifier = Modifier.weight(1f)) {
                         Text("See all apps from this developer", style = MaterialTheme.typography.bodyLarge)
                         Text(
-                            "Open the full Hartmann Studios Play listing",
+                            if (com.charlesh.captionburn.BuildConfig.STORE == "direct") "Open the full Hartmann Studios app list" else "Open the full Hartmann Studios Play listing",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

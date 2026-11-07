@@ -28,6 +28,9 @@ android {
     ndkVersion = "28.2.13676358"
 
     defaultConfig {
+        // Store this build is for: "play" (default) or "direct" (./gradlew ... -Pstore=direct).
+        // Direct (GitHub / charleshartmann.com) builds drop Google Play links, the Play in-app review prompt and Play purchases.
+        buildConfigField("String", "STORE", "\"${(project.findProperty("store") as String?) ?: "play"}\"")
         applicationId = "com.charlesh.captionburn"
         minSdk = 33
         targetSdk = 36
