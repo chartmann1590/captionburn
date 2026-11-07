@@ -56,6 +56,7 @@ object CrossPromoInstaller {
     fun initialize(context: Context) {
         val url = BuildConfig.CROSS_PROMO_URL
         if (url.isBlank()) return // cross promo silently disabled without config
+        if (com.charlesh.captionburn.BuildConfig.STORE == "amazon") return // Amazon Appstore build: cross promo links to Google Play, so it stays off
 
         HartmannCrossPromo.initialize(
             context = context,
