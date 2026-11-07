@@ -4,28 +4,39 @@ shot 01-launch
 taploop (?i)^(next|next step|continue|get started|skip|skip for now|allow|ok|accept|agree|got it|start|i agree|not now|later|maybe later|no thanks|done|finish tutorial|english|while using the app|only this time|let.s go)$
 adclose
 wait 3
-shot 02-after-onboarding
-taploop (?i)^(next|next step|continue|get started|skip|skip for now|allow|ok|accept|agree|got it|start|i agree|not now|later|maybe later|no thanks|done|finish tutorial|english|while using the app|only this time|let.s go)$
-adclose
-shot 03-home
+shot 02-home
 tap (?i)^settings$
 wait 4
 adclose
-shot 04-settings
-swipeup
-shot 05-settings-mid
-scrollto (?i)^see all apps from this developer$
+shot 03-settings
+sh input swipe 600 1250 600 450 500
+wait 1
+shot 04-settings-mid
+sh input swipe 600 1250 600 450 500
+wait 1
+sh input swipe 600 1250 600 450 500
+wait 1
+shot 05-settings-low
+tap (?i)^see all apps from this developer$
 wait 4
 adclose
 shot 06-more-apps
-swipeup
-shot 07-more-apps-bottom
+sh input swipe 600 1250 600 450 500
+wait 1
+shot 07-more-apps-scrolled
 back
 wait 2
-swipeup
-swipeup
+sh input swipe 600 1250 600 450 500
+wait 1
+sh input swipe 600 1250 600 450 500
+wait 1
 shot 08-settings-bottom
 back
+wait 3
+shot 09-back-home
+tap (?i)import video
+wait 4
+shot 10-import-picker
 back
 wait 2
-shot 09-back-home
+shot 11-home-again
